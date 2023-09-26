@@ -1,6 +1,7 @@
 # Root
 node_modules
 yarn.lock
+bun.lockb
 
 # Client
 client/node_modules/
