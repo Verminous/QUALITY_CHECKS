@@ -1,8 +1,8 @@
 Arguments: 
-  C:\Program Files\nodejs\node.exe C:\Program Files (x86)\Yarn\bin\yarn.js add @testing-library/jest-dom@^5.14.1 @testing-library/react@^13.0.0 @testing-library/user-event@^13.2.1 web-vitals@^2.1.0
+  C:\Program Files\nodejs\node.exe C:\Program Files (x86)\Yarn\bin\yarn.js upgrade
 
 PATH: 
-  C:\Users\TarranaB\AppData\Local\Temp\yarn--1695648754320-0.9692161596168112;C:\Users\TarranaB\AppData\Local\Yarn\Data\global\node_modules\.bin;C:\Users\TarranaB\AppData\Local\Yarn\Data\link\node_modules\.bin;C:\Program Files\libexec\lib\node_modules\npm\bin\node-gyp-bin;C:\Program Files\lib\node_modules\npm\bin\node-gyp-bin;C:\Program Files\nodejs\node_modules\npm\bin\node-gyp-bin;C:\Program Files\PowerShell\7;c:\Users\TarranaB\AppData\Local\Programs\cursor\resources\app\bin;C:\Python311\Scripts\;C:\Python311\;C:\Windows\CCM\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Windows\system32\config\systemprofile\AppData\Local\Microsoft\WindowsApps;C:\Program Files (x86)\Adaptiva\AdaptivaClient\bin\x32;C:\Program Files (x86)\Adaptiva\AdaptivaClient\bin\x64;C:\Program Files\Docker\Docker\resources\bin;C:\Program Files\dotnet\;C:\ProgramData\chocolatey\bin;C:\Program Files (x86)\Yarn\bin\;C:\Program Files\PuTTY\;C:\Program Files\MongoDB\Server\6.0\bin;C:\Users\ADM_TarranaB\AppData\Roaming\nvm;C:\Program Files\nodejs;C:\Program Files\nodejs\;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\PowerShell\7\;C:\Users\TarranaB\AppData\Local\Microsoft\WindowsApps;C:\Users\TarranaB\AppData\Local\Programs\Git\cmd;C:\Users\TarranaB\AppData\Local\GitHubD;c:\Users\TarranaB\AppData\Local\Programs\cursor\resources\app\bin;C:\Users\TarranaB\AppData\Local\Microsoft\WindowsApps;C:\Users\TarranaB\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\TarranaB\AppData\Local\Programs\Git\cmd;C:\Users\TarranaB\AppData\Local\GitHubDesktop\bin;C:\Users\TarranaB\AppData\Local\Yarn\bin;C:\Users\TarranaB\AppData\Roaming\npm;
+  C:\Program Files\PowerShell\7;c:\Users\TarranaB\AppData\Local\Programs\cursor\resources\app\bin;C:\Python311\Scripts\;C:\Python311\;C:\Windows\CCM\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Windows\system32\config\systemprofile\AppData\Local\Microsoft\WindowsApps;C:\Program Files (x86)\Adaptiva\AdaptivaClient\bin\x32;C:\Program Files (x86)\Adaptiva\AdaptivaClient\bin\x64;C:\Program Files\Docker\Docker\resources\bin;C:\Program Files\dotnet\;C:\ProgramData\chocolatey\bin;C:\Program Files (x86)\Yarn\bin\;C:\Program Files\PuTTY\;C:\Program Files\MongoDB\Server\6.0\bin;C:\Users\ADM_TarranaB\AppData\Roaming\nvm;C:\Program Files\nodejs;C:\Program Files\nodejs\;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\PowerShell\7\;C:\Users\TarranaB\AppData\Local\Microsoft\WindowsApps;C:\Users\TarranaB\AppData\Local\Programs\Git\cmd;C:\Users\TarranaB\AppData\Local\GitHubD;c:\Users\TarranaB\AppData\Local\Programs\cursor\resources\app\bin;C:\Users\TarranaB\AppData\Local\Microsoft\WindowsApps;C:\Users\TarranaB\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\TarranaB\AppData\Local\Programs\Git\cmd;C:\Users\TarranaB\AppData\Local\GitHubDesktop\bin;C:\Users\TarranaB\AppData\Local\Yarn\bin;C:\Users\TarranaB\AppData\Roaming\npm;
 
 Yarn version: 
   1.22.19
@@ -14,7 +14,7 @@ Platform:
   win32 x64
 
 Trace: 
-  Error: write EPROTO C0030000:error:0A00010B:SSL routines:ssl3_get_record:wrong version number:c:\ws\deps\openssl\openssl\ssl\record\ssl3_record.c:355:
+  Error: write EPROTO 94540000:error:0A00007B:SSL routines:tls_process_key_exchange:bad signature:c:\ws\deps\openssl\openssl\ssl\statem\statem_clnt.c:2314:
   
       at WriteWrap.onWriteComplete [as oncomplete] (node:internal/stream_base_commons:94:16)
 
@@ -23,11 +23,13 @@ npm manifest:
     "name": "client",
     "version": "0.1.0",
     "private": true,
+    "proxy": "http://localhost:3001",
     "dependencies": {
       "cra-template": "1.2.0",
       "react": "^18.2.0",
       "react-dom": "^18.2.0",
-      "react-scripts": "5.0.1"
+      "react-scripts": "5.0.1",
+      "web-vitals": "^3.4.0"
     },
     "scripts": {
       "start": "react-scripts start",
@@ -7500,7 +7502,7 @@ Lockfile:
       strip-ansi "^6.0.1"
       text-table "^0.2.0"
   
-  react-dom@18.2.0:
+  react-dom@^18.2.0:
     version "18.2.0"
     resolved "https://registry.npmjs.org/react-dom/-/react-dom-18.2.0.tgz#22aaf38708db2674ed9ada224ca4aa708d821e3d"
     integrity sha512-6IMTriUmvsjHUjNtEDudZfuDQUoWXVxKHhlEGSk81n4YFS+r/Kl99wXiwlVXtPBtJenozv2P+hxDsw9eA7Xo6g==
@@ -7588,7 +7590,7 @@ Lockfile:
     optionalDependencies:
       fsevents "^2.3.2"
   
-  react@18.2.0:
+  react@^18.2.0:
     version "18.2.0"
     resolved "https://registry.npmjs.org/react/-/react-18.2.0.tgz#555bd98592883255fa00de14f1151a917b5d77d5"
     integrity sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==
@@ -8902,6 +8904,11 @@ Lockfile:
     integrity sha512-O84QOnr0icsbFGLS0O3bI5FswxzRr8/gHwWkDlQFskhSPryQXvrTMxjxGP4+iWYoauLoBvfDpkrOauZ+0iZpDA==
     dependencies:
       minimalistic-assert "^1.0.0"
+  
+  web-vitals@^3.4.0:
+    version "3.4.0"
+    resolved "https://registry.npmjs.org/web-vitals/-/web-vitals-3.4.0.tgz#45ed33a3a2e029dc38d36547eb5d71d1c7e2552d"
+    integrity sha512-n9fZ5/bG1oeDkyxLWyep0eahrNcPDF6bFqoyispt7xkW0xhDzpUBTgyDKqWDi1twT0MgH4HvvqzpUyh0ZxZV4A==
   
   webidl-conversions@^4.0.2:
     version "4.0.2"

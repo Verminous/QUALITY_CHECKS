@@ -2,6 +2,7 @@
   "dependencies": {
     "concurrently": "^8.2.1"
   },
+  "license": "MIT",
   "scripts": {
     "dev": "concurrently \"yarn --cwd server start\" \"yarn --cwd client start\""
   }
