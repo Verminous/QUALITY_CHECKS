@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "concurrently": "^8.2.1"
+  },
+  "scripts": {
+    "dev": "concurrently \"yarn --cwd server start\" \"yarn --cwd client start\""
+  }
+}
