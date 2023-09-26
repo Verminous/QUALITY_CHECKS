@@ -1,29 +1,24 @@
 const express = require('express');
+const multer = require('multer');
 const app = express();
-const path = require('path');
-const port = 3001; // Note: using a different port from React
+const port = 3001;
 
-
-app.get('/api/hello', (req, res) => {
-  res.send({ message: 'Hello from server!' });
-});
+const upload = multer({ dest: 'uploads/' });
 
 app.get('/', (req, res) => {
   res.send('Server running!');
 });
 
+app.post('/upload', upload.single('file'), (req, res) => {
+  console.log('File received:', req.file);
+  
+  // TODO: Process the file here
+  
+  res.json({ message: 'File received' });
+});
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
 });
 
-/********* - HOW SO SERVE STATIC FILES IN CLIENT/REACT VIA NODE/BUN - *********/
 
-// // Serve static files from the React app
-// app.use(express.static(path.join(__dirname, '../client/public')));
-
-// // The "catchall" handler: for any request that doesn't
-// // match one above, send back React's index.html file.
-// app.get('/', (req, res) => {
-//   res.sendFile(path.join(__dirname + '../client/public/index.html'));
-// });
