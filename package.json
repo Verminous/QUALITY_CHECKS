@@ -3,6 +3,6 @@
     "concurrently": "^8.2.1"
   },
   "scripts": {
-    "dev": "concurrently \"bun --cwd server start\" \"bun --cwd client start\""
+    "dev": "concurrently \"yarn --cwd server start\" \"yarn --cwd client start\""
   }
 }
