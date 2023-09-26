@@ -85,6 +85,7 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
                 </select>
             </label>
             <br /><br />
+
             <div className="config-grid">
                 <strong>#</strong>
                 <strong>Service:</strong>
@@ -106,7 +107,7 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
                     </React.Fragment>
                 ))}
             </div>
-            <br /><br />
+            <br />
 
             <h2>Supporting Functions Team Members</h2>
             <textarea
@@ -126,6 +127,7 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
 
             <h2>Download processed Excel file</h2>
             <button>Download</button>
+            <br /><br /><br /><br />
         </div>
     );
 };
