@@ -2,6 +2,7 @@
 node_modules
 yarn.lock
 bun.lockb
+.vscode
 
 # Client
 client/node_modules/
