@@ -8,6 +8,6 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
-    "start": "node app.js"
+    "start": "bun app.js"
   }
 }

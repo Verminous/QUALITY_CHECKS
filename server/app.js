@@ -17,6 +17,8 @@ app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/ !`);
 });
 
+/********* - HOW SO SERVE STATIC FILES IN CLIENT/REACT VIA NODE/BUN - *********/
+
 // // Serve static files from the React app
 // app.use(express.static(path.join(__dirname, '../client/public')));
 
