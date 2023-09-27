@@ -5,5 +5,8 @@
   "license": "MIT",
   "scripts": {
     "dev": "concurrently \"yarn --cwd server start\" \"yarn --cwd client start\""
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
   }
 }

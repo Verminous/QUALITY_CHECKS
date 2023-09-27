@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
     const fileInput = React.createRef();
@@ -47,6 +47,15 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
     };
 
     const [config, setConfig] = useState(defaultConfig);
+
+    useEffect(() => {
+        setConfig(prevConfig => ({
+            ...prevConfig,
+            incidentConfigs: Array.from({ length: config.incidentsPerAgent }, (_, index) => (
+                prevConfig.incidentConfigs[index] || { service: services[0], contactType: contactTypes[0], ftf: 'TRUE' }
+            ))
+        }));
+    }, [config.incidentsPerAgent, contactTypes, services]);
 
     const handleIncidentChange = (index, field, value) => {
         const updatedConfigs = [...config.incidentConfigs];
