@@ -5,53 +5,56 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+
+require("dotenv").config({
+  path: path.join(__dirname, ".env"),
+});
 
 const app = express();
 const port = process.env.SERV_PORT;
 const hostname = process.env.HOSTNAME;
-
 const upload = multer({ dest: "uploads/" });
 
 app.use(bodyParser.json());
 app.use(cors());
 
 app.get("/", (req, res) => {
-    res.send("Server running!");
+  res.send("Server running!");
 });
 
 let lastUploadedFilePath;
 
 app.post("/upload", upload.single("file"), (req, res) => {
-    lastUploadedFilePath = req.file.path;
-    const workbook = xlsx.readFile(lastUploadedFilePath);
-    const sheet_name_list = workbook.SheetNames;
-    const xlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
-    const agentNames = [...new Set(xlData.map((data) => data["Taken By"]))];
-    res.json({ agentNames });
+  lastUploadedFilePath = req.file.path;
+  const workbook = xlsx.readFile(lastUploadedFilePath);
+  const sheet_name_list = workbook.SheetNames;
+  const xlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
+  const agentNames = [...new Set(xlData.map((data) => data["Taken By"]))];
+  res.json({ agentNames });
 });
 
 app.post("/process", upload.single("file"), async (req, res) => {
-    const config = req.body;
-    const workbook = xlsx.readFile(lastUploadedFilePath);
-    const sheetName = workbook.SheetNames[0];
-    const originalXlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
-    const xlData = JSON.parse(JSON.stringify(originalXlData)); 
-    const incidentsByAgent = {};
-    const incidentConfigs = config.incidentConfigs;
-    const getIncidentConfig = (index) => incidentConfigs[index % incidentConfigs.length];
+  const config = req.body;
+  const workbook = xlsx.readFile(lastUploadedFilePath);
+  const sheetName = workbook.SheetNames[0];
+  const originalXlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+  const xlData = JSON.parse(JSON.stringify(originalXlData));
+  const incidentsByAgent = {};
+  const incidentConfigs = config.incidentConfigs;
 
-    xlData.forEach((incident, index) => {
-        const agent = incident["Taken By"];
-        if (!incidentsByAgent[agent]) {
-            incidentsByAgent[agent] = [];
-        }
-        const incidentConfig = getIncidentConfig(incidentsByAgent[agent].length);
-        incident["Service"] = incidentConfig.service === 'RANDOM' ? incident["Service"] : incidentConfig.service;
-        incident["Contact type"] = incidentConfig.contactType === 'RANDOM' ? incident["Contact type"] : incidentConfig.contactType;
-        incident["First time fix"] = incidentConfig.ftf === 'RANDOM' ? incident["First time fix"] : incidentConfig.ftf;
-        incidentsByAgent[agent].push(incident);
-    });
+  const getIncidentConfig = (index) => incidentConfigs[index % incidentConfigs.length];
+
+  xlData.forEach((incident, index) => {
+    const agent = incident["Taken By"];
+    if (!incidentsByAgent[agent]) {
+      incidentsByAgent[agent] = [];
+    }
+    const incidentConfig = getIncidentConfig(incidentsByAgent[agent].length);
+    incident["Service"] = incidentConfig.service === "RANDOM" ? incident["Service"] : incident["Service"];
+    incident["Contact type"] = incidentConfig.contactType === "RANDOM" ? incident["Contact type"] : incidentConfig.contactType;
+    incident["First time fix"] = incidentConfig.ftf === "RANDOM" ? incident["First time fix"] : incidentConfig.ftf;
+    incidentsByAgent[agent].push(incident);
+  });
 
     const sfMembers = config.sfMembers;
     const agents = Object.keys(incidentsByAgent);
