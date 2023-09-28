@@ -12,6 +12,6 @@ client/yarn-error.log
 
 # Server
 server/node_modules/
-server/uploads
+server/uploads/
 server/yarn.lock
 server/yarn-error.log
