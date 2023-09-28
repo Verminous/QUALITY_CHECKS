@@ -5,7 +5,7 @@ const processUrl = process.env.REACT_APP_SERVER_PROCESS_URL;
 
 const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
     const fileInput = React.createRef();
-
+ 
     const services = useMemo(() => [
         'EMEIA Workplace',
         'Secure Internet Gateway (Global SIG)',
@@ -35,12 +35,12 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
     const defaultConfig = {
         incidentsPerAgent: 10,
         incidentConfigs: [
-            { service: 'EMEIA Workplace', contactType: 'Phone', ftf: 'FALSE' },
-            { service: 'EMEIA Workplace', contactType: 'Self-service', ftf: 'FALSE' },
-            { service: 'Secure Internet Gateway (Global SIG)', contactType: 'Phone', ftf: 'FALSE' },
-            { service: 'Secure Internet Gateway (Global SIG)', contactType: 'Self-service', ftf: 'FALSE' },
-            { service: 'Identity and Access Management', contactType: 'Phone', ftf: 'FALSE' },
-            { service: 'Identity and Access Management', contactType: 'Self-service', ftf: 'FALSE' },
+            { service: 'EMEIA Workplace', contactType: 'RANDOM', ftf: 'RANDOM' },
+            { service: 'EMEIA Workplace', contactType: 'RANDOM', ftf: 'RANDOM' },
+            { service: 'Secure Internet Gateway (Global SIG)', contactType: 'RANDOM', ftf: 'RANDOM' },
+            { service: 'Secure Internet Gateway (Global SIG)', contactType: 'RANDOM', ftf: 'RANDOM' },
+            { service: 'Identity and Access Management', contactType: 'RANDOM', ftf: 'RANDOM' },
+            { service: 'Identity and Access Management', contactType: 'RANDOM', ftf: 'RANDOM' },
             { service: 'RANDOM', contactType: 'RANDOM', ftf: 'RANDOM' },
             { service: 'RANDOM', contactType: 'RANDOM', ftf: 'RANDOM' },
             { service: 'RANDOM', contactType: 'RANDOM', ftf: 'RANDOM' },
@@ -86,6 +86,11 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
 
     const handleConfigSubmit = async () => {
         const sfMembersArray = sfMembers.split('\n').map(name => name.trim()).filter(name => name.length > 0);
+
+        console.log('Submitting Config:', {
+            ...config,
+            sfMembers: sfMembersArray
+          });
 
         try {
             const response = await fetch(processUrl, {
@@ -137,7 +142,7 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
             <div className="config-grid">
                 <strong>#</strong>
                 <strong>Service:</strong>
-                <strong>Type of contact:</strong>
+                <strong>Contact Type:</strong>
                 <strong>FTF:</strong>
                 {config.incidentConfigs.map((incidentConfig, index) => (
                     <React.Fragment key={index}>
