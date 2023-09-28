@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 
+const uploadUrl = process.env.REACT_APP_SERVER_UPLOAD_URL;
+const processUrl = process.env.REACT_APP_SERVER_PROCESS_URL;
+
 const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
     const fileInput = React.createRef();
 
@@ -69,7 +72,7 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
             const formData = new FormData();
             formData.append('file', file); 
             try {
-                const response = await fetch('http://localhost:3001/upload', {
+                const response = await fetch(uploadUrl, {
                     method: 'POST',
                     body: formData,
                 });
@@ -85,7 +88,7 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
         const sfMembersArray = sfMembers.split('\n').map(name => name.trim()).filter(name => name.length > 0);
 
         try {
-            const response = await fetch('http://localhost:3001/process', {
+            const response = await fetch(processUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -99,7 +102,7 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                a.download = 'processed.xlsx';
+                a.download = process.env.REACT_APP_CLI_FILENAME;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);

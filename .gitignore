@@ -3,6 +3,7 @@ node_modules
 yarn.lock
 bun.lockb
 .vscode
+.env
 
 # Client
 client/node_modules/

@@ -5,9 +5,11 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = express();
-const port = 3001;
+const port = process.env.SERV_PORT;
+
 const upload = multer({ dest: "uploads/" });
 
 app.use(bodyParser.json());
@@ -15,6 +17,16 @@ app.use(cors());
 
 app.get("/", (req, res) => {
   res.send("Server running!");
+});
+
+app.get('/get-env', (req, res) => {
+  const clientEnv = Object.keys(process.env)
+    .filter(key => key.startsWith('CLI_'))
+    .reduce((obj, key) => {
+      obj[key] = process.env[key];
+      return obj;
+    }, {});
+  res.json(clientEnv);
 });
 
 let lastUploadedFilePath;
@@ -66,26 +78,21 @@ app.post("/process", upload.single("file"), async (req, res) => {
   }
 
   const rows = [];
-  rows.push({
-    "SF Member": "SF Member",
-    Agent: "Agent",
-    "Task Number": "Task Number",
-    Service: "Service",
-    "Contact Type": "Contact Type",
-    "First Time Fix": "First Time Fix",
-  });
-
+  let previousSFMember = "";
+  let previousAgent = "";
   for (const sfMember in selectedIncidents) {
     for (const agent in selectedIncidents[sfMember]) {
-      selectedIncidents[sfMember][agent].forEach((incident) => {
+      selectedIncidents[sfMember][agent].forEach((incident, index) => {
         rows.push({
-          "SF Member": sfMember,
-          Agent: agent,
+          "SF Member": previousSFMember === sfMember ? "" : sfMember,
+          Agent: previousAgent === agent ? "" : agent,
           "Task Number": incident["Task Number"],
           Service: incident["Service"],
           "Contact Type": incident["Contact type"],
           "First Time Fix": incident["First time fix"],
         });
+        if (previousSFMember !== sfMember) previousSFMember = sfMember;
+        if (previousAgent !== agent) previousAgent = agent;
       });
     }
   }
@@ -99,18 +106,14 @@ app.post("/process", upload.single("file"), async (req, res) => {
     newWorkbook.Sheets["Processed List"] = newWorksheet;
   }
 
-  const newFilePath = path.join(
-    __dirname,
-    "uploads",
-    "AskIT - QCH_processed.xlsx"
-  );
+  const newFilePath = path.join(__dirname, "uploads", process.env.SERV_FILENAME);
   xlsx.writeFile(newWorkbook, newFilePath);
 
-  res.setHeader(
-    "Content-Disposition",
-    'attachment; filename="AskIT - QCH_processed.xlsx"'
-  );
-  res.sendFile(newFilePath);
+  res.download(newFilePath, "AskIT - QCH_processed.xlsx", function (err) {
+    if (err) {
+      console.error("Error sending the file:", err);
+    }
+  });
 });
 
 app.listen(port, () => {
