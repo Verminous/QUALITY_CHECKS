@@ -29,7 +29,6 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
         'RANDOM'
     ], []);
 
-    // Default Configuration
     const defaultConfig = {
         incidentsPerAgent: 10,
         incidentConfigs: [
@@ -39,10 +38,10 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
             { service: 'Secure Internet Gateway (Global SIG)', contactType: 'Self-service', ftf: 'FALSE' },
             { service: 'Identity and Access Management', contactType: 'Phone', ftf: 'FALSE' },
             { service: 'Identity and Access Management', contactType: 'Self-service', ftf: 'FALSE' },
-            { service: 'RANDOM', contactType: 'Chat', ftf: 'FALSE' },
-            { service: 'RANDOM', contactType: 'Phone', ftf: 'FALSE' },
-            { service: 'RANDOM', contactType: 'Self-service', ftf: 'FALSE' },
-            { service: 'RANDOM', contactType: 'Self-service', ftf: 'FALSE' }
+            { service: 'RANDOM', contactType: 'RANDOM', ftf: 'RANDOM' },
+            { service: 'RANDOM', contactType: 'RANDOM', ftf: 'RANDOM' },
+            { service: 'RANDOM', contactType: 'RANDOM', ftf: 'RANDOM' },
+            { service: 'RANDOM', contactType: 'RANDOM', ftf: 'RANDOM' }
         ]
     };
 
@@ -63,22 +62,59 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
         setConfig(prevConfig => ({ ...prevConfig, incidentConfigs: updatedConfigs }));
     };
 
-    const handleFileInput = e => {
-        // Get the selected file
+    const handleFileInput = async (e) => {
         const file = fileInput.current.files[0];
         if (file) {
             onFileSelect(file);
+            const formData = new FormData();
+            formData.append('file', file); 
+            try {
+                const response = await fetch('http://localhost:3001/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+                const data = await response.json();
+                setAgentAccounts(data.agentNames.join('\n'));
+            } catch (error) {
+                console.error('Error uploading file:', error);
+            }
         }
     };
 
-    const handleConfigSubmit = () => {
+    const handleConfigSubmit = async () => {
         const sfMembersArray = sfMembers.split('\n').map(name => name.trim()).filter(name => name.length > 0);
-        onConfigSubmit({ ...config, sfMembers: sfMembersArray });
+
+        try {
+            const response = await fetch('http://localhost:3001/process', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ...config, sfMembers: sfMembersArray }),
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'processed.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            } else {
+                console.error('Failed to process the file.');
+            }
+        } catch (error) {
+            console.error('Error processing file:', error);
+        }
     };
-    
+
     const [sfMembers, setSfMembers] = useState(
         "Kempa, Martin\nSocha, Michał\nKrasowicz, Barbara\nSzczypior, Dawid\nSiemieniuk, Roman\nKalbarczyk, Jan\nLubonski, Piotr\nKucinska, Diana\nZiółkowski, Konrad\nKoplin, Krzysztof"
     );
+    const [agentAccounts, setAgentAccounts] = useState('');
 
     return (
         <div>
@@ -112,31 +148,40 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
                         <select value={incidentConfig.ftf} onChange={(e) => handleIncidentChange(index, 'ftf', e.target.value)}>
                             <option value="TRUE">TRUE</option>
                             <option value="FALSE">FALSE</option>
+                            <option value="RANDOM">RANDOM</option>
                         </select>
                     </React.Fragment>
                 ))}
             </div>
             <br />
+            <div className='all-accounts'>
+                <div className='sf-accounts'>
+                    <h2>SF team members</h2>
+                    (Update/change manually)<br /><br />
+                    <textarea
+                        rows="10"
+                        cols="30"
+                        value={sfMembers}
+                        onChange={e => setSfMembers(e.target.value)}
+                        placeholder="Paste the list of SF team members here, one per line."
+                    />
+                </div>
+                <div className='agent-accounts'>
+                    <h2>Agent Accounts</h2>
+                    ( Populated from raw Excel file<br /> - delete unwanted accounts/lines )<br /><br />
+                    <textarea
+                        rows="10"
+                        value={agentAccounts}
+                        onChange={e => setAgentAccounts(e.target.value)}
+                        placeholder="Agent accounts will be automatically populated here after file upload."
+                    />
+                </div>
+            </div>
 
-            <h2>Supporting Functions Team Members</h2>
-            <textarea
-                rows="10"
-                cols="30"
-                value={sfMembers}
-                onChange={e => setSfMembers(e.target.value)}
-                placeholder="Paste the list of SF team members here, one per line."
-            />
-            <br /><br />
-
-
+            <h2>Process and Download Excel file</h2>
             <button onClick={handleConfigSubmit}>Process</button>
             <br /><br />
 
-
-
-            <h2>Download processed Excel file</h2>
-            <button>Download</button>
-            <br /><br /><br /><br />
         </div>
     );
 };

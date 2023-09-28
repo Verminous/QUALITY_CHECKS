@@ -1,3 +1,7 @@
+body {
+  margin-bottom: 50px;
+}
+
 .my-uploader {
   margin-top: 15px;
   display: grid;
@@ -11,4 +15,15 @@
   grid-template-columns: auto repeat(3, 1fr);
   gap: 10px;
   align-items: center;
+}
+
+.all-accounts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.sf-accounts,
+.agent-accounts {
+  width: 100%;
 }
