@@ -35,8 +35,8 @@ app.post("/process", upload.single("file"), async (req, res) => {
     const config = req.body;
     const workbook = xlsx.readFile(lastUploadedFilePath);
     const sheetName = workbook.SheetNames[0];
-    const xlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
-
+    const originalXlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    const xlData = JSON.parse(JSON.stringify(originalXlData)); 
     const incidentsByAgent = {};
     const incidentConfigs = config.incidentConfigs;
     const getIncidentConfig = (index) => incidentConfigs[index % incidentConfigs.length];
@@ -78,19 +78,25 @@ app.post("/process", upload.single("file"), async (req, res) => {
     const rows = [];
     let previousSFMember = "";
     let previousAgent = "";
+
+    const processedTaskNumbers = new Set(); 
+
     for (const sfMember in selectedIncidents) {
         for (const agent in selectedIncidents[sfMember]) {
             selectedIncidents[sfMember][agent].forEach((incident, index) => {
-                rows.push({
-                    "SF Member": previousSFMember === sfMember ? "" : sfMember,
-                    Agent: previousAgent === agent ? "" : agent,
-                    "Task Number": incident["Task Number"],
-                    Service: incident["Service"],
-                    "Contact Type": incident["Contact type"],
-                    "First Time Fix": incident["First time fix"],
-                });
-                if (previousSFMember !== sfMember) previousSFMember = sfMember;
-                if (previousAgent !== agent) previousAgent = agent;
+                if (!processedTaskNumbers.has(incident["Task Number"])) {
+                    processedTaskNumbers.add(incident["Task Number"]);
+                    rows.push({
+                        "SF Member": previousSFMember === sfMember ? "" : sfMember,
+                        Agent: previousAgent === agent ? "" : agent,
+                        "Task Number": incident["Task Number"],
+                        Service: incident["Service"],
+                        "Contact Type": incident["Contact type"],
+                        "First Time Fix": incident["First time fix"],
+                    });
+                    if (previousSFMember !== sfMember) previousSFMember = sfMember;
+                    if (previousAgent !== agent) previousAgent = agent;
+                }
             });
         }
     }
