@@ -9,6 +9,7 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 const port = process.env.SERV_PORT;
+const hostname = process.env.HOSTNAME;
 
 const upload = multer({ dest: "uploads/" });
 
@@ -117,5 +118,5 @@ app.post("/process", upload.single("file"), async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}/`);
+  console.log(`Server running at http://${hostname}:${port}/`);
 });
