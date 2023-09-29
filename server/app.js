@@ -98,7 +98,8 @@ app.post("/process", upload.single("file"), async (req, res) => {
           incidentConfig.contactType !== "RANDOM"
             ? incidentConfig.contactType
             : null;
-            let currentFtf = incidentConfig.ftf !== "RANDOM" ? String(incidentConfig.ftf).toLowerCase() === "true" : null;
+        let currentFtf =
+          incidentConfig.ftf !== "RANDOM" ? incidentConfig.ftf : null;
         let potentialIncidents = incidentsByAgent[agent].filter((incident) => {
           const serviceMatches =
             incidentConfig.service !== "RANDOM"
@@ -108,7 +109,10 @@ app.post("/process", upload.single("file"), async (req, res) => {
             incidentConfig.contactType !== "RANDOM"
               ? incident["Contact type"] === incidentConfig.contactType
               : true;
-              const ftfMatches = incidentConfig.ftf !== "RANDOM" ? String(incident["First time fix"]).toLowerCase() === String(currentFtf).toLowerCase() : true;
+          const ftfMatches =
+            incidentConfig.ftf !== "RANDOM"
+              ? incident["First time fix"] == incidentConfig.ftf
+              : true;
           return (
             !processedTaskNumbers.has(incident["Task Number"]) &&
             serviceMatches &&
@@ -132,9 +136,9 @@ app.post("/process", upload.single("file"), async (req, res) => {
           });
         }
         const selectedFromThisConfig = potentialIncidents.slice(
-            0,
-            Math.min(incidentsForThisConfig, incidentConfig.incidents)
-          );
+          0,
+          incidentsForThisConfig
+        );
         selectedFromThisConfig.forEach((incident) => {
           processedTaskNumbers.add(incident["Task Number"]);
           selectedIncidents[sfMember][agent].push(incident);
