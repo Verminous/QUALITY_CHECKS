@@ -10,13 +10,11 @@ const app = express();
 const port = process.env.SERV_PORT;
 const hostname = process.env.HOSTNAME;
 const upload = multer({ dest: "uploads/" });
-
 app.use(bodyParser.json());
 app.use(cors());
 app.get("/", (req, res) => {
   res.send("Server running!");
 });
-
 let lastUploadedFilePath;
 app.post("/upload", upload.single("file"), (req, res) => {
   lastUploadedFilePath = req.file.path;
@@ -26,21 +24,47 @@ app.post("/upload", upload.single("file"), (req, res) => {
   const agentNames = [...new Set(xlData.map((data) => data["Taken By"]))];
   res.json({ agentNames });
 });
-
 function getRandomValue(options) {
-    const index = Math.floor(Math.random() * options.length);
-    return options[index];
+  const index = Math.floor(Math.random() * options.length);
+  return options[index];
 }
-
+function getRandomService() {
+  return getRandomValue([
+    "EMEIA Workplace",
+    "Secure Internet Gateway (Global SIG)",
+    "Identity and Access Management",
+    "Identity Access Management (Finland)",
+    "M365 Teams",
+    "M365 Email",
+    "M365 Apps",
+    "Software Distribution (SCCM)",
+    "Ask IT",
+    "EMEIA Messaging",
+    "Mobile Phones UK",
+    "ZinZai Connect",
+    "ForcePoint",
+    "Network Service (CE/WEMEIA)",
+    "M365 Sharepoint",
+  ]);
+}
+function getRandomContactType() {
+  return getRandomValue([
+    "Self-service",
+    "Phone - Unknown User",
+    "Phone",
+    "Chat",
+  ]);
+}
+function getRandomFtf() {
+  return getRandomValue([true, false]);
+}
 app.post("/process", upload.single("file"), async (req, res) => {
-
   const config = req.body;
   const workbook = xlsx.readFile(lastUploadedFilePath);
   const sheetName = workbook.SheetNames[0];
   const originalXlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
   const incidentsByAgent = {};
   const incidentConfigs = config.incidentConfigs;
-
   originalXlData.forEach((incident) => {
     const agent = incident["Taken By"];
     if (!incidentsByAgent[agent]) {
@@ -48,22 +72,18 @@ app.post("/process", upload.single("file"), async (req, res) => {
     }
     incidentsByAgent[agent].push(incident);
   });
-
   const sfMembers = config.sfMembers;
   const agents = Object.keys(incidentsByAgent);
   const shuffledAgents = agents.sort(() => 0.5 - Math.random());
   const sfAgentMapping = {};
-
   shuffledAgents.forEach((agent, index) => {
     const sfMember = sfMembers[index % sfMembers.length];
     if (!sfAgentMapping[sfMember]) sfAgentMapping[sfMember] = [];
     sfAgentMapping[sfMember].push(agent);
   });
-
   const selectedIncidents = {};
   const maxIncidents = config.incidentsPerAgent || 10;
   const processedTaskNumbers = new Set();
-
   for (const sfMember in sfAgentMapping) {
     selectedIncidents[sfMember] = {};
     sfAgentMapping[sfMember].forEach((agent) => {
@@ -71,95 +91,88 @@ app.post("/process", upload.single("file"), async (req, res) => {
       let incidentsForThisConfig = Math.ceil(
         maxIncidents / incidentConfigs.length
       );
-
-      incidentConfigs.forEach((incidentConfig) => {
-        let currentService = incidentConfig.service;
-        let currentContactType = incidentConfig.contactType;
-        let currentFtf = incidentConfig.ftf;
-    
-        if (incidentConfig.service === "RANDOM") {
-            currentService = getRandomValue([
-                'EMEIA Workplace',
-                'Secure Internet Gateway (Global SIG)',
-                'Identity and Access Management',
-                'M365 Teams',
-                'M365 Email',
-                'M365 Apps',
-                'Software Distribution (SCCM)',
-                'Ask IT',
-                'EMEIA Messaging',
-                'Mobile Phones UK',
-                'ZinZai Connect',
-                'ForcePoint',
-                'Network Service (CE/WEMEIA)',
-                'M365 Sharepoint'
-            ]);
-        }
-        
-        if (incidentConfig.contactType === "RANDOM") {
-            currentContactType = getRandomValue([
-                "Self-service", 
-                "Phone - Unknown User", 
-                "Phone", 
-                "Chat"
-            ]);
-        }
-
-        if (incidentConfig.ftf === "RANDOM") {
-            currentFtf = getRandomValue([true, false]);
-        }
-
-        const potentialIncidents = incidentsByAgent[agent].filter((incident) => {
-            return (
-                !processedTaskNumbers.has(incident["Task Number"]) &&
-                currentService === incident["Service"] &&
-                currentContactType === incident["Contact type"] &&
-                currentFtf === incident["First time fix"]
-            );
+      for (const incidentConfig of incidentConfigs) {
+        let currentService =
+          incidentConfig.service !== "RANDOM" ? incidentConfig.service : null;
+        let currentContactType =
+          incidentConfig.contactType !== "RANDOM"
+            ? incidentConfig.contactType
+            : null;
+        let currentFtf =
+          incidentConfig.ftf !== "RANDOM" ? incidentConfig.ftf : null;
+        let potentialIncidents = incidentsByAgent[agent].filter((incident) => {
+          return (
+            !processedTaskNumbers.has(incident["Task Number"]) &&
+            (currentService ? currentService === incident["Service"] : true) &&
+            (currentContactType
+              ? currentContactType === incident["Contact type"]
+              : true) &&
+            (currentFtf ? currentFtf === incident["First time fix"] : true)
+          );
         });
-        
-
+        if (potentialIncidents.length < incidentsForThisConfig) {
+          if (incidentConfig.service === "RANDOM")
+            currentService = getRandomService();
+          if (incidentConfig.contactType === "RANDOM")
+            currentContactType = getRandomContactType();
+          if (incidentConfig.ftf === "RANDOM") currentFtf = getRandomFtf();
+          potentialIncidents = incidentsByAgent[agent].filter((incident) => {
+            return (
+              !processedTaskNumbers.has(incident["Task Number"]) &&
+              currentService === incident["Service"] &&
+              currentContactType === incident["Contact type"] &&
+              currentFtf === incident["First time fix"]
+            );
+          });
+        }
         const selectedFromThisConfig = potentialIncidents.slice(
           0,
           incidentsForThisConfig
         );
-
         selectedFromThisConfig.forEach((incident) => {
           processedTaskNumbers.add(incident["Task Number"]);
           selectedIncidents[sfMember][agent].push(incident);
         });
-
         incidentsForThisConfig =
-          incidentsForThisConfig +
-          (incidentsForThisConfig - selectedFromThisConfig.length);
-      });
-
-
-      const remainingIncidents =
+          incidentsForThisConfig - selectedFromThisConfig.length;
+      }
+      let remainingIncidents =
         maxIncidents - selectedIncidents[sfMember][agent].length;
-      if (remainingIncidents > 0) {
-        const potentialIncidents = incidentsByAgent[agent].filter(
-            (incident) => !processedTaskNumbers.has(incident["Task Number"])
-        );
-        
-        
-        const selectedRandomly = potentialIncidents.slice(
+      for (const incidentConfig of incidentConfigs) {
+        if (remainingIncidents <= 0) break;
+        let currentService =
+          incidentConfig.service !== "RANDOM"
+            ? incidentConfig.service
+            : getRandomService();
+        let currentContactType =
+          incidentConfig.contactType !== "RANDOM"
+            ? incidentConfig.contactType
+            : getRandomContactType();
+        let currentFtf =
+          incidentConfig.ftf !== "RANDOM" ? incidentConfig.ftf : getRandomFtf();
+        let potentialIncidents = incidentsByAgent[agent].filter((incident) => {
+          return (
+            !processedTaskNumbers.has(incident["Task Number"]) &&
+            currentService === incident["Service"] &&
+            currentContactType === incident["Contact type"] &&
+            currentFtf === incident["First time fix"]
+          );
+        });
+        const selectedForRemaining = potentialIncidents.slice(
           0,
           remainingIncidents
         );
-
-        selectedRandomly.forEach((incident) => {
+        selectedForRemaining.forEach((incident) => {
           processedTaskNumbers.add(incident["Task Number"]);
           selectedIncidents[sfMember][agent].push(incident);
         });
+        remainingIncidents = remainingIncidents - selectedForRemaining.length;
       }
     });
   }
-
   const rows = [];
   let previousSFMember = "";
   let previousAgent = "";
-
   for (const sfMember in selectedIncidents) {
     for (const agent in selectedIncidents[sfMember]) {
       for (
@@ -180,15 +193,16 @@ app.post("/process", upload.single("file"), async (req, res) => {
             !processedTaskNumbers.has(incident["Task Number"])
           );
         });
-
         filteredIncidents.forEach((incident) => {
-          if (selectedIncidents[sfMember][agent].length < maxIncidents) {
+          if (
+            selectedIncidents[sfMember][agent].length < maxIncidents &&
+            incident["Taken By"] === agent
+          ) {
             processedTaskNumbers.add(incident["Task Number"]);
             selectedIncidents[sfMember][agent].push(incident);
           }
         });
       }
-
       selectedIncidents[sfMember][agent].forEach((incident) => {
         rows.push({
           "SF Member": previousSFMember === sfMember ? "" : sfMember,
@@ -203,39 +217,33 @@ app.post("/process", upload.single("file"), async (req, res) => {
       });
     }
   }
-
   const newWorkbook = workbook;
   if (rows.length === 0) {
     res.status(500).send("No incidents matched the provided configuration");
     return;
   }
-
   const newWorksheet = xlsx.utils.json_to_sheet(rows);
   if (!newWorkbook.Sheets["Processed List"]) {
     xlsx.utils.book_append_sheet(newWorkbook, newWorksheet, "Processed List");
   } else {
     newWorkbook.Sheets["Processed List"] = newWorksheet;
   }
-
   const newFilePath = path.join(
     __dirname,
     "uploads",
     process.env.SERV_FILENAME
   );
-
   try {
     xlsx.writeFile(newWorkbook, newFilePath);
   } catch (error) {
     console.error("Error writing the workbook:", error);
   }
-
   res.download(newFilePath, "AskIT - QCH_processed.xlsx", function (err) {
     if (err) {
       console.error("Error sending the file:", err);
     }
   });
 });
-
 app.listen(port, () => {
   console.log(`Server running at http://${hostname}:${port}/`);
 });

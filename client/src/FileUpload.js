@@ -10,6 +10,7 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
         'EMEIA Workplace',
         'Secure Internet Gateway (Global SIG)',
         'Identity and Access Management',
+        'Identity Access Management (Finland)',
         'M365 Teams',
         'M365 Email',
         'M365 Apps',
