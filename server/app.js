@@ -70,35 +70,35 @@ app.post("/process", upload.single("file"), async (req, res) => {
         selectedIncidents[sfMember] = {};
         sfAgentMapping[sfMember].forEach((agent) => {
             selectedIncidents[sfMember][agent] = [];
-
-            let remainingIncidents = maxIncidents;
-            let exhaustedConfigs = new Set();  // To keep track of configs that have no more incidents left
-
-            while (remainingIncidents > 0 && exhaustedConfigs.size < incidentConfigs.length) {
-                incidentConfigs.forEach((incidentConfig, configIndex) => {
-                    if (exhaustedConfigs.has(configIndex)) return;
-
-                    const filteredIncidents = originalXlData.filter((incident) => {
-                        return (incidentConfig.service === "RANDOM" || incidentConfig.service === incident["Service"]) &&
-                            (incidentConfig.contactType === "RANDOM" || incidentConfig.contactType === incident["Contact type"]) &&
-                            (incidentConfig.ftf === "RANDOM" || incidentConfig.ftf === incident["First time fix"]) &&
-                            !processedTaskNumbers.has(incident["Task Number"]);
-                    });
-
-                    if (filteredIncidents.length === 0) {
-                        exhaustedConfigs.add(configIndex);
-                        return;
-                    }
-
-                    filteredIncidents.sort((a, b) => a["Task Number"] - b["Task Number"]).forEach((incident) => {
-                        if (remainingIncidents > 0) {
-                            processedTaskNumbers.add(incident["Task Number"]);
-                            selectedIncidents[sfMember][agent].push(incident);
-                            remainingIncidents--;
-                        }
-                    });
+            
+            let incidentsForThisConfig = Math.ceil(maxIncidents / incidentConfigs.length);
+            
+            incidentConfigs.forEach((incidentConfig) => {
+                const potentialIncidents = originalXlData.filter(incident => {
+                    return (!processedTaskNumbers.has(incident["Task Number"])) &&
+                           (incidentConfig.service === "RANDOM" || incidentConfig.service === incident["Service"]) &&
+                           (incidentConfig.contactType === "RANDOM" || incidentConfig.contactType === incident["Contact type"]) &&
+                           (incidentConfig.ftf === "RANDOM" || incidentConfig.ftf === incident["First time fix"]);
                 });
-                exhaustedConfigs = new Set();  // Reset exhaustedConfigs for each agent
+                
+                const selectedFromThisConfig = potentialIncidents.slice(0, incidentsForThisConfig);
+                
+                selectedFromThisConfig.forEach(incident => {
+                    processedTaskNumbers.add(incident["Task Number"]);
+                    selectedIncidents[sfMember][agent].push(incident);
+                });
+                
+                incidentsForThisConfig = incidentsForThisConfig + (incidentsForThisConfig - selectedFromThisConfig.length);
+            });
+
+            const remainingIncidents = maxIncidents - selectedIncidents[sfMember][agent].length;
+            if (remainingIncidents > 0) {
+                const potentialIncidents = originalXlData.filter(incident => !processedTaskNumbers.has(incident["Task Number"]));
+                const selectedRandomly = potentialIncidents.slice(0, remainingIncidents);
+                selectedRandomly.forEach(incident => {
+                    processedTaskNumbers.add(incident["Task Number"]);
+                    selectedIncidents[sfMember][agent].push(incident);
+                });
             }
         });
     }
