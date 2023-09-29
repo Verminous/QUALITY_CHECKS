@@ -107,7 +107,7 @@ app.post("/process", upload.single("file"), async (req, res) => {
                     const contactTypeMatches = incidentConfig.contactType !== "RANDOM"
                         ? incident["Contact type"] === incidentConfig.contactType
                         : true;
-                        const ftfMatches = incidentConfig.ftf !== "RANDOM" 
+                    const ftfMatches = incidentConfig.ftf !== "RANDOM"
                         ? String(incident["First time fix"]).toUpperCase() === String(incidentConfig.ftf).toUpperCase()
                         : true;
                     return (!processedTaskNumbers.has(incident["Task Number"]) && serviceMatches && contactTypeMatches && ftfMatches);
