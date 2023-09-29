@@ -132,9 +132,9 @@ app.post("/process", upload.single("file"), async (req, res) => {
           });
         }
         const selectedFromThisConfig = potentialIncidents.slice(
-          0,
-          incidentsForThisConfig
-        );
+            0,
+            Math.min(incidentsForThisConfig, incidentConfig.incidents)
+          );
         selectedFromThisConfig.forEach((incident) => {
           processedTaskNumbers.add(incident["Task Number"]);
           selectedIncidents[sfMember][agent].push(incident);
