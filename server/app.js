@@ -7,7 +7,7 @@ const fs = require("fs");
 const path = require("path");
 
 require("dotenv").config({
-  path: path.join(__dirname, ".env"),
+    path: path.join(__dirname, ".env"),
 });
 
 const app = express();
@@ -19,48 +19,40 @@ app.use(bodyParser.json());
 app.use(cors());
 
 app.get("/", (req, res) => {
-  res.send("Server running!");
+    res.send("Server running!");
 });
 
 let lastUploadedFilePath;
 
 app.post("/upload", upload.single("file"), (req, res) => {
-  lastUploadedFilePath = req.file.path;
-  const workbook = xlsx.readFile(lastUploadedFilePath);
-  const sheet_name_list = workbook.SheetNames;
-  const xlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
-  const agentNames = [...new Set(xlData.map((data) => data["Taken By"]))];
-  res.json({ agentNames });
+    lastUploadedFilePath = req.file.path;
+    const workbook = xlsx.readFile(lastUploadedFilePath);
+    const sheet_name_list = workbook.SheetNames;
+    const xlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
+    const agentNames = [...new Set(xlData.map((data) => data["Taken By"]))];
+    res.json({ agentNames });
 });
 
 app.post("/process", upload.single("file"), async (req, res) => {
-  const config = req.body;
-  const workbook = xlsx.readFile(lastUploadedFilePath);
-  const sheetName = workbook.SheetNames[0];
-  const originalXlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
-  const xlData = JSON.parse(JSON.stringify(originalXlData));
-  const incidentsByAgent = {};
-  const incidentConfigs = config.incidentConfigs;
+    const config = req.body;
+    const workbook = xlsx.readFile(lastUploadedFilePath);
+    const sheetName = workbook.SheetNames[0];
+    const originalXlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    const incidentsByAgent = {};
+    const incidentConfigs = config.incidentConfigs;
 
-  const getIncidentConfig = (index) => incidentConfigs[index % incidentConfigs.length];
-
-  xlData.forEach((incident, index) => {
-    const agent = incident["Taken By"];
-    if (!incidentsByAgent[agent]) {
-      incidentsByAgent[agent] = [];
-    }
-    const incidentConfig = getIncidentConfig(incidentsByAgent[agent].length);
-    incident["Service"] = incidentConfig.service === "RANDOM" ? incident["Service"] : incident["Service"];
-    incident["Contact type"] = incidentConfig.contactType === "RANDOM" ? incident["Contact type"] : incidentConfig.contactType;
-    incident["First time fix"] = incidentConfig.ftf === "RANDOM" ? incident["First time fix"] : incidentConfig.ftf;
-    incidentsByAgent[agent].push(incident);
-  });
+    originalXlData.forEach((incident) => {
+        const agent = incident["Taken By"];
+        if (!incidentsByAgent[agent]) {
+            incidentsByAgent[agent] = [];
+        }
+        incidentsByAgent[agent].push(incident);
+    });
 
     const sfMembers = config.sfMembers;
     const agents = Object.keys(incidentsByAgent);
     const shuffledAgents = agents.sort(() => 0.5 - Math.random());
     const sfAgentMapping = {};
-
     shuffledAgents.forEach((agent, index) => {
         const sfMember = sfMembers[index % sfMembers.length];
         if (!sfAgentMapping[sfMember]) sfAgentMapping[sfMember] = [];
@@ -70,11 +62,44 @@ app.post("/process", upload.single("file"), async (req, res) => {
     const selectedIncidents = {};
     const maxIncidents = config.incidentsPerAgent || 10;
 
+    const processedTaskNumbers = new Set();
+
+    
+
     for (const sfMember in sfAgentMapping) {
         selectedIncidents[sfMember] = {};
         sfAgentMapping[sfMember].forEach((agent) => {
-            const agentIncidents = incidentsByAgent[agent].slice(0, maxIncidents);
-            selectedIncidents[sfMember][agent] = agentIncidents;
+            selectedIncidents[sfMember][agent] = [];
+
+            let remainingIncidents = maxIncidents;
+            let exhaustedConfigs = new Set();  // To keep track of configs that have no more incidents left
+
+            while (remainingIncidents > 0 && exhaustedConfigs.size < incidentConfigs.length) {
+                incidentConfigs.forEach((incidentConfig, configIndex) => {
+                    if (exhaustedConfigs.has(configIndex)) return;
+
+                    const filteredIncidents = originalXlData.filter((incident) => {
+                        return (incidentConfig.service === "RANDOM" || incidentConfig.service === incident["Service"]) &&
+                            (incidentConfig.contactType === "RANDOM" || incidentConfig.contactType === incident["Contact type"]) &&
+                            (incidentConfig.ftf === "RANDOM" || incidentConfig.ftf === incident["First time fix"]) &&
+                            !processedTaskNumbers.has(incident["Task Number"]);
+                    });
+
+                    if (filteredIncidents.length === 0) {
+                        exhaustedConfigs.add(configIndex);
+                        return;
+                    }
+
+                    filteredIncidents.sort((a, b) => a["Task Number"] - b["Task Number"]).forEach((incident) => {
+                        if (remainingIncidents > 0) {
+                            processedTaskNumbers.add(incident["Task Number"]);
+                            selectedIncidents[sfMember][agent].push(incident);
+                            remainingIncidents--;
+                        }
+                    });
+                });
+                exhaustedConfigs = new Set();  // Reset exhaustedConfigs for each agent
+            }
         });
     }
 
@@ -82,24 +107,34 @@ app.post("/process", upload.single("file"), async (req, res) => {
     let previousSFMember = "";
     let previousAgent = "";
 
-    const processedTaskNumbers = new Set(); 
-
     for (const sfMember in selectedIncidents) {
         for (const agent in selectedIncidents[sfMember]) {
-            selectedIncidents[sfMember][agent].forEach((incident, index) => {
-                if (!processedTaskNumbers.has(incident["Task Number"])) {
-                    processedTaskNumbers.add(incident["Task Number"]);
-                    rows.push({
-                        "SF Member": previousSFMember === sfMember ? "" : sfMember,
-                        Agent: previousAgent === agent ? "" : agent,
-                        "Task Number": incident["Task Number"],
-                        Service: incident["Service"],
-                        "Contact Type": incident["Contact type"],
-                        "First Time Fix": incident["First time fix"],
-                    });
-                    if (previousSFMember !== sfMember) previousSFMember = sfMember;
-                    if (previousAgent !== agent) previousAgent = agent;
-                }
+            for (let i = 0; i < incidentConfigs.length && selectedIncidents[sfMember][agent].length < maxIncidents; i++) {
+                const incidentConfig = incidentConfigs[i];
+                const filteredIncidents = originalXlData.filter((incident) => {
+                    return (incidentConfig.service === "RANDOM" || incidentConfig.service === incident["Service"]) &&
+                        (incidentConfig.contactType === "RANDOM" || incidentConfig.contactType === incident["Contact type"]) &&
+                        (incidentConfig.ftf === "RANDOM" || incidentConfig.ftf === incident["First time fix"]) &&
+                        !processedTaskNumbers.has(incident["Task Number"]);
+                });
+                filteredIncidents.forEach((incident) => {
+                    if (selectedIncidents[sfMember][agent].length < maxIncidents) {
+                        processedTaskNumbers.add(incident["Task Number"]);
+                        selectedIncidents[sfMember][agent].push(incident);
+                    }
+                });
+            }
+            selectedIncidents[sfMember][agent].forEach((incident) => {
+                rows.push({
+                    "SF Member": previousSFMember === sfMember ? "" : sfMember,
+                    Agent: previousAgent === agent ? "" : agent,
+                    "Task Number": incident["Task Number"],
+                    Service: incident["Service"],
+                    "Contact Type": incident["Contact type"],
+                    "First Time Fix": incident["First time fix"],
+                });
+                if (previousSFMember !== sfMember) previousSFMember = sfMember;
+                if (previousAgent !== agent) previousAgent = agent;
             });
         }
     }
@@ -132,6 +167,7 @@ app.post("/process", upload.single("file"), async (req, res) => {
             console.error("Error sending the file:", err);
         }
     });
+
 });
 
 app.listen(port, () => {
