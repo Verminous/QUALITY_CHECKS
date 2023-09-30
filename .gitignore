@@ -4,12 +4,15 @@ yarn.lock
 bun.lockb
 .vscode
 .env
+.DS_Store
 
 # Client
 client/node_modules/
 client/build/
 client/yarn.lock
 client/yarn-error.log
+client/.DS_Store
+
 
 # Server
 server/node_modules/
@@ -17,3 +20,4 @@ server/uploads/
 server/uploads/AskIT_QCH_processed.xlsx
 server/yarn.lock
 server/yarn-error.log
+server/.DS_Store
