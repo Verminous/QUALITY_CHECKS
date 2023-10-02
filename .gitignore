@@ -4,6 +4,7 @@ yarn.lock
 bun.lockb
 .vscode
 .env
+AskIT - QCH.xlsx
 
 # Client
 client/node_modules/
