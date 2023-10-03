@@ -4,6 +4,7 @@ yarn.lock
 bun.lockb
 .vscode
 .env
+.DS_Store
 
 # Client
 client/node_modules/
