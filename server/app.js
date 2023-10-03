@@ -138,6 +138,28 @@ function mapSFAgentsToIncidentAgents(sfMembers, incidentsByAgent) {
   });
   return sfAgentMapping;
 }
+function formatRowsForDownload(selectedIncidents) {
+  const rows = [];
+  let previousSFMember = "";
+  let previousAgent = "";
+  for (const sfMember in selectedIncidents) {
+    for (const agent in selectedIncidents[sfMember]) {
+      selectedIncidents[sfMember][agent].forEach((incident) => {
+        rows.push({
+          "SF Member": previousSFMember === sfMember ? "" : sfMember,
+          Agent: previousAgent === agent ? "" : agent,
+          "Task Number": incident["Task Number"],
+          Service: incident["Service"],
+          "Contact type": incident["Contact type"],
+          "First time fix": incident["First time fix"],
+        });
+        if (previousSFMember !== sfMember) previousSFMember = sfMember;
+        if (previousAgent !== agent) previousAgent = agent;
+      });
+    }
+  }
+  return rows;
+}
 function selectIncidentsByConfiguration(
   originalXlData,
   incidentConfigs,
@@ -198,28 +220,7 @@ function selectIncidentsByConfiguration(
   }
   return selectedIncidents;
 }
-function formatRowsForDownload(selectedIncidents) {
-  const rows = [];
-  let previousSFMember = "";
-  let previousAgent = "";
-  for (const sfMember in selectedIncidents) {
-    for (const agent in selectedIncidents[sfMember]) {
-      selectedIncidents[sfMember][agent].forEach((incident) => {
-        rows.push({
-          "SF Member": previousSFMember === sfMember ? "" : sfMember,
-          Agent: previousAgent === agent ? "" : agent,
-          "Task Number": incident["Task Number"],
-          Service: incident["Service"],
-          "Contact type": incident["Contact type"],
-          "First time fix": incident["First time fix"],
-        });
-        if (previousSFMember !== sfMember) previousSFMember = sfMember;
-        if (previousAgent !== agent) previousAgent = agent;
-      });
-    }
-  }
-  return rows;
-}
+
 app.listen(port, () => {
   console.log(`Server running at http://${hostname}:${port}/`);
 });
