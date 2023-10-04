@@ -160,66 +160,56 @@ function formatRowsForDownload(selectedIncidents) {
   }
   return rows;
 }
-function selectIncidentsByConfiguration(
+async function selectIncidentsByConfiguration(
   originalXlData,
   incidentConfigs,
   maxIncidents,
   sfAgentMapping
 ) {
-  const incidentsByAgent = {};
   const selectedIncidents = {};
-  const processedTaskNumbersByAgent = {}; 
+  const processedTaskNumbersByAgent = {};
   const processedTaskNumbers = new Set();
-  originalXlData.forEach((incident) => {
-    const agent = incident["Taken By"];
-    if (!incidentsByAgent[agent]) {
-      incidentsByAgent[agent] = [];
-    }
-    incidentsByAgent[agent].push(incident);
-  });
+
   for (const sfMember in sfAgentMapping) {
     selectedIncidents[sfMember] = {};
+
     sfAgentMapping[sfMember].forEach((agent) => {
-      if (!processedTaskNumbersByAgent[agent]) { 
+      if (!processedTaskNumbersByAgent[agent]) {
         processedTaskNumbersByAgent[agent] = new Set();
       }
-      
+
       selectedIncidents[sfMember][agent] = [];
+
       for (const incidentConfig of incidentConfigs) {
-        let currentService =
-          incidentConfig.service !== "RANDOM"
-            ? incidentConfig.service
-            : getRandomService();
-        let currentContactType =
-          incidentConfig.contactType !== "RANDOM"
-            ? incidentConfig.contactType
-            : getRandomContactType();
-        let currentFtf =
-          incidentConfig.ftf !== "RANDOM" ? incidentConfig.ftf : getRandomFtf();
-          let potentialIncidents = incidentsByAgent[agent].filter((incident) => {
-            return (
-              !processedTaskNumbers.has(incident["Task Number"]) && 
-              !processedTaskNumbersByAgent[agent].has(incident["Task Number"]) && 
-              currentService === incident["Service"] &&
-              currentContactType === incident["Contact type"] &&
-              currentFtf === incident["First time fix"]
-            );
-          });
-        let incidentsToAssign = Math.min(
-          potentialIncidents.length,
+        const filteredIncidents = originalXlData.filter((incident) => {
+          return (
+            !processedTaskNumbers.has(incident["Task Number"]) &&
+            !processedTaskNumbersByAgent[agent].has(incident["Task Number"]) &&
+            incident["Taken By"] === agent &&
+            (incidentConfig.service === "RANDOM" || incidentConfig.service === incident["Service"]) &&
+            (incidentConfig.contactType === "RANDOM" || incidentConfig.contactType === incident["Contact type"]) &&
+            (incidentConfig.ftf === "RANDOM" || incidentConfig.ftf === incident["First time fix"])
+          );
+        });
+
+        const toBeSelected = Math.min(
+          filteredIncidents.length,
           maxIncidents - selectedIncidents[sfMember][agent].length
         );
-        for (let i = 0; i < incidentsToAssign; i++) {
-          let incident = potentialIncidents[i];
+
+        for (let i = 0; i < toBeSelected; i++) {
+          const incident = filteredIncidents[i];
           selectedIncidents[sfMember][agent].push(incident);
-          processedTaskNumbers.add(incident["Task Number"]); 
+          processedTaskNumbers.add(incident["Task Number"]);
           processedTaskNumbersByAgent[agent].add(incident["Task Number"]);
         }
       }
     });
   }
+
   return selectedIncidents;
 }
+
 
 app.listen(port, () => {
   console.log(`Server running at http://${hostname}:${port}/`);
