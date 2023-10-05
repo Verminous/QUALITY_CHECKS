@@ -12,10 +12,26 @@ const hostname = process.env.HOSTNAME;
 const upload = multer({ dest: "uploads/" });
 
 app.use(bodyParser.json());
-app.use(cors());
+
+app.use((req, res, next) => {
+  const allowedOrigins = ['http://localhost:8080', `http://${req.hostname}:8080`];
+  const origin = req.headers.origin;
+
+  if (origin && allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', true);
+  next();
+});
+
+
 app.get("/", (req, res) => {
   res.send("Server running!");
 });
+
 let lastUploadedFilePath;
 app.post("/upload", upload.single("file"), (req, res) => {
   lastUploadedFilePath = req.file.path;
@@ -211,6 +227,7 @@ async function selectIncidentsByConfiguration(
 }
 
 
-app.listen(port, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
+app.listen(port, hostname, () => {
+    console.log(`Server running at http://${hostname}:${port}/`);
 });
+

@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 
-const uploadUrl = process.env.REACT_APP_SERVER_UPLOAD_URL;
-const processUrl = process.env.REACT_APP_SERVER_PROCESS_URL;
+const serverPort = process.env.REACT_APP_SERVER_PORT;
+const currentHost = window.location.hostname;
+const uploadUrl = `http://${currentHost}:${serverPort}/upload`;
+const processUrl = `http://${currentHost}:${serverPort}/process`; // Adjust this if needed
+
 
 const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
     const fileInput = React.createRef();
