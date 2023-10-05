@@ -5,6 +5,7 @@ bun.lockb
 .vscode
 .env
 .DS_Store
+QCH.xlsx
 
 # Client
 client/node_modules/
