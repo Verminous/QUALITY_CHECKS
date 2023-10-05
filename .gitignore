@@ -1,21 +1,23 @@
 # Root
+.env
+.gitignore
 node_modules
 yarn.lock
 bun.lockb
 .vscode
-.env
 .DS_Store
 QCH.xlsx
 
 # Client
+client/.env
 client/node_modules/
 client/build/
 client/yarn.lock
 client/yarn-error.log
 client/.DS_Store
 
-
 # Server
+server/.env
 server/node_modules/
 server/uploads/
 server/uploads/AskIT_QCH_processed.xlsx
