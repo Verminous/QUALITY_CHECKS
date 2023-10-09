@@ -39,7 +39,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
 
 app.post("/process", upload.single("file"), async (req, res) => {
   try {
-    const config = req.body; /**/ console.log(config);
+    const config = req.body;
     const workbook = xlsx.readFile(lastUploadedFilePath);
     const sheetName = workbook.SheetNames[0];
     const originalXlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
@@ -201,4 +201,3 @@ async function selectIncidentsByConfiguration(originalXlData, incidentConfigs, m
 app.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`);
 });
-
