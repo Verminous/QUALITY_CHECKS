@@ -37,6 +37,24 @@ app.post("/upload", upload.single("file"), (req, res) => {
   res.json({ agentNames });
 });
 
+const createAndWriteWorksheet = (workbook, rows) => {
+  const newWorksheet = xlsx.utils.json_to_sheet(rows);
+  if (!workbook.Sheets["Processed List"]) {
+    xlsx.utils.book_append_sheet(workbook, newWorksheet, "Processed List");
+  } else {
+    workbook.Sheets["Processed List"] = newWorksheet;
+  }
+  const newFilePath = path.join(__dirname, "uploads", process.env.SERV_FILENAME);
+  xlsx.writeFile(workbook, newFilePath);
+  return newFilePath;
+};
+
+const downloadFile = (res, newFilePath) => {
+  res.download(newFilePath, "AskIT - QCH_processed.xlsx", function (err) {
+    if (err) throw new Error("Error sending the file: " + err);
+  });
+};
+
 app.post("/process", upload.single("file"), async (req, res) => {
   try {
     const config = req.body;
@@ -46,50 +64,16 @@ app.post("/process", upload.single("file"), async (req, res) => {
     const incidentConfigs = config.incidentConfigs;
     const sfMembers = config.sfMembers;
     const incidentsByAgent = mapIncidentsByAgent(originalXlData);
-    const sfAgentMapping = mapSFMembersToIncidentAgents(
-      sfMembers,
-      incidentsByAgent
-    );
-    const selectedIncidents = await selectIncidentsByConfiguration(
-      originalXlData,
-      incidentConfigs,
-      config.incidentsPerAgent,
-      sfAgentMapping
-    );
+    const sfAgentMapping = mapSFMembersToIncidentAgents(sfMembers, incidentsByAgent);
+    const selectedIncidents = await selectIncidentsByConfiguration(originalXlData, incidentConfigs, config.incidentsPerAgent, sfAgentMapping);
     const rows = formatRowsForDownload(selectedIncidents);
-    if (rows.length < config.incidentsPerAgent) {
-      console.error("Not enough incidents matched the provided configuration");
-      return res
-        .status(500)
-        .send("Not enough incidents matched the provided configuration");
-    }
-    const newWorksheet = xlsx.utils.json_to_sheet(rows);
-    if (!workbook.Sheets["Processed List"]) {
-      xlsx.utils.book_append_sheet(workbook, newWorksheet, "Processed List");
-    } else {
-      workbook.Sheets["Processed List"] = newWorksheet;
-    }
-    const newFilePath = path.join(
-      __dirname,
-      "uploads",
-      process.env.SERV_FILENAME
-    );
-    try {
-      xlsx.writeFile(workbook, newFilePath);
-    } catch (error) {
-      console.error("Error writing the workbook:", error);
-    }
-    res.download(newFilePath, "AskIT - QCH_processed.xlsx", function (err) {
-      if (err) {
-        console.error("Error sending the file:", err);
-      }
-    });
+    if (rows.length < config.incidentsPerAgent) throw new Error("Not enough incidents matched the provided configuration");
+    const newFilePath = createAndWriteWorksheet(workbook, rows);
+    downloadFile(res, newFilePath);
   } catch (error) {
     console.error("Error in /process:", error);
     console.error("Request body:", req.body);
-    if (lastUploadedFilePath) {
-      console.error("Last uploaded file path:", lastUploadedFilePath);
-    }
+    if (lastUploadedFilePath) console.error("Last uploaded file path:", lastUploadedFilePath);
     res.status(500).send("Internal Server Error");
   }
 });
@@ -159,7 +143,6 @@ function filterIncidentsByCriterion(incidents, field, value, agent) {
 
 const selectUniqueIncidentForAgent = (filteredIncidents, processedTaskNumbers, agentTaskNumbers) => {
   const unassignedIncidents = filteredIncidents.filter(incident =>
-      !processedTaskNumbers.has(incident['Task Number']) &&
       !agentTaskNumbers.has(incident['Task Number'])
   );
   return unassignedIncidents.length ? unassignedIncidents[Math.floor(Math.random() * unassignedIncidents.length)] : null;
@@ -188,7 +171,6 @@ async function selectIncidentsByConfiguration(originalXlData, incidentConfigs, m
 
               if (selectedIncident) {
                   selectedIncidents[sfMember][agent].push(selectedIncident);
-                  processedTaskNumbers.add(selectedIncident['Task Number']);
                   processedTaskNumbersByAgent[agent].add(selectedIncident['Task Number']);
               }
           }
