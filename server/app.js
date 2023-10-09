@@ -58,19 +58,25 @@ app.post("/process", upload.single("file"), async (req, res) => {
   }
 });
 
-const createAndWriteWorksheet = (workbook, rows) => {
-  const newWorksheet = xlsx.utils.json_to_sheet(rows);
-  workbook.Sheets["Processed List"] ? workbook.Sheets["Processed List"] = newWorksheet : xlsx.utils.book_append_sheet(workbook, newWorksheet, "Processed List");
-  const newFilePath = path.join(__dirname, "uploads", process.env.SERV_FILENAME);
-  xlsx.writeFile(workbook, newFilePath);
-  return newFilePath;
-};
-
-const downloadFile = (res, newFilePath) => {
-  res.download(newFilePath, "AskIT - QCH_processed.xlsx", function (err) {
-    if (err) throw new Error("Error sending the file: " + err);
+const selectIncidentsByConfiguration = async (originalXlData, incidentConfigs, maxIncidents, sfAgentMapping) => {
+  const selectedIncidents = {};
+  const alreadySelected = {};
+  Object.keys(sfAgentMapping).forEach(sfMember => {
+    selectedIncidents[sfMember] = {};
+    sfAgentMapping[sfMember].forEach(agent => {
+      selectedIncidents[sfMember][agent] = [];
+      alreadySelected[agent] = new Set();
+      Array(maxIncidents).fill().forEach((_, i) => {
+        const incidentConfig = incidentConfigs[i % incidentConfigs.length];
+        let potentialIncidents = [...originalXlData];
+        ['Service', 'Contact type', 'First time fix'].forEach(field => { potentialIncidents = filterIncidentsByCriterion(potentialIncidents, field, incidentConfig[field.toLowerCase()], agent, alreadySelected[agent]); });
+        const selectedIncident = selectUniqueIncidentForAgent(potentialIncidents, alreadySelected[agent]);
+        selectedIncident ? (selectedIncidents[sfMember][agent].push(selectedIncident), alreadySelected[agent].add(selectedIncident)) : null;
+      });
+    });
   });
-};
+  return selectedIncidents;
+}
 
 const mapIncidentsByAgent = (originalXlData) => {
   const incidentsByAgent = {};
@@ -92,6 +98,30 @@ const mapSFMembersToIncidentAgents = (sfMembers, incidentsByAgent) => {
   });
   return sfAgentMapping;
 }
+
+const filterIncidentsByCriterion = (incidents, field, value, agent, alreadySelected) => {
+  value = (value === 'RANDOM') ? getRandomValue(incidents, field) : value;
+  const filtered = incidents.filter(incident => !alreadySelected.has(incident) && incident[field] === value && incident['Taken By'] === agent);
+  return filtered.length ? filtered : incidents.filter(incident => incident['Taken By'] === agent);
+}
+
+const getRandomValue = (incidents, field) => {
+  const values = [...new Set(incidents.map(incident => incident[field]))];
+  return values[Math.floor(Math.random() * values.length)];
+}
+
+const selectUniqueIncidentForAgent = (filteredIncidents, alreadySelected) => {
+  const uniqueIncidents = filteredIncidents.filter(incident => !alreadySelected.has(incident));
+  return uniqueIncidents.length ? uniqueIncidents[Math.floor(Math.random() * uniqueIncidents.length)] : null;
+};
+
+const createAndWriteWorksheet = (workbook, rows) => {
+  const newWorksheet = xlsx.utils.json_to_sheet(rows);
+  workbook.Sheets["Processed List"] ? workbook.Sheets["Processed List"] = newWorksheet : xlsx.utils.book_append_sheet(workbook, newWorksheet, "Processed List");
+  const newFilePath = path.join(__dirname, "uploads", process.env.SERV_FILENAME);
+  xlsx.writeFile(workbook, newFilePath);
+  return newFilePath;
+};
 
 const formatRowsForDownload = (selectedIncidents) => {
   const rows = [];
@@ -116,40 +146,10 @@ const formatRowsForDownload = (selectedIncidents) => {
   return rows;
 };
 
-const selectIncidentsByConfiguration = async (originalXlData, incidentConfigs, maxIncidents, sfAgentMapping) => {
-  const selectedIncidents = {};
-  const alreadySelected = {};
-  Object.keys(sfAgentMapping).forEach(sfMember => {
-    selectedIncidents[sfMember] = {};
-    sfAgentMapping[sfMember].forEach(agent => {
-      selectedIncidents[sfMember][agent] = [];
-      alreadySelected[agent] = new Set();
-      Array(maxIncidents).fill().forEach((_, i) => {
-        const incidentConfig = incidentConfigs[i % incidentConfigs.length];
-        let potentialIncidents = [...originalXlData];
-        ['Service', 'Contact type', 'First time fix'].forEach(field => { potentialIncidents = filterIncidentsByCriterion(potentialIncidents, field, incidentConfig[field.toLowerCase()], agent, alreadySelected[agent]); });
-        const selectedIncident = selectUniqueIncidentForAgent(potentialIncidents, alreadySelected[agent]);
-        selectedIncident ? (selectedIncidents[sfMember][agent].push(selectedIncident), alreadySelected[agent].add(selectedIncident)) : null;
-      });
-    });
+const downloadFile = (res, newFilePath) => {
+  res.download(newFilePath, "AskIT - QCH_processed.xlsx", function (err) {
+    if (err) throw new Error("Error sending the file: " + err);
   });
-  return selectedIncidents;
-}
-
-const filterIncidentsByCriterion = (incidents, field, value, agent, alreadySelected) => {
-  value = (value === 'RANDOM') ? getRandomValue(incidents, field) : value;
-  const filtered = incidents.filter(incident => !alreadySelected.has(incident) && incident[field] === value && incident['Taken By'] === agent);
-  return filtered.length ? filtered : incidents.filter(incident => incident['Taken By'] === agent);
-}
-
-const getRandomValue = (incidents, field) => {
-  const values = [...new Set(incidents.map(incident => incident[field]))];
-  return values[Math.floor(Math.random() * values.length)];
-}
-
-const selectUniqueIncidentForAgent = (filteredIncidents, alreadySelected) => {
-  const uniqueIncidents = filteredIncidents.filter(incident => !alreadySelected.has(incident));
-  return uniqueIncidents.length ? uniqueIncidents[Math.floor(Math.random() * uniqueIncidents.length)] : null;
 };
 
 app.listen(port, hostname, () => {
