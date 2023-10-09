@@ -18,7 +18,7 @@ app.use((req, res, next) => {
   const origin = req.headers.origin;
 
   if (origin && allowedOrigins.includes(origin)) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Origin', origin);
   }
 
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
@@ -40,11 +40,13 @@ app.post("/upload", upload.single("file"), (req, res) => {
   const agentNames = [...new Set(xlData.map((data) => data["Taken By"]))];
   res.json({ agentNames });
 });
-function getRandomValue(options) {
+
+const getRandomValue = (options) => {
   const index = Math.floor(Math.random() * options.length);
   return options[index];
 }
-function getRandomService() {
+
+const getRandomService = () => {
   return getRandomValue([
     "EMEIA Workplace",
     "Secure Internet Gateway (Global SIG)",
@@ -63,7 +65,8 @@ function getRandomService() {
     "M365 Sharepoint",
   ]);
 }
-function getRandomContactType() {
+
+const getRandomContactType = () => {
   return getRandomValue([
     "Self-service",
     "Phone - Unknown User",
@@ -71,19 +74,22 @@ function getRandomContactType() {
     "Chat",
   ]);
 }
-function getRandomFtf() {
+
+const getRandomFtf = () => {
   return getRandomValue([true, false]);
 }
+
 app.post("/process", upload.single("file"), async (req, res) => {
   try {
-    const config = req.body;
+    const config = req.body; /**/ console.log(config);
     const workbook = xlsx.readFile(lastUploadedFilePath);
     const sheetName = workbook.SheetNames[0];
     const originalXlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
     const incidentConfigs = config.incidentConfigs;
     const sfMembers = config.sfMembers;
-    const incidentsByAgent = mapIncidentsByAgent(originalXlData);
-    const sfAgentMapping = mapSFAgentsToIncidentAgents(
+    const agentNames = req.body.agentNames; // Get the agent names from the request body
+    const incidentsByAgent = mapIncidentsByAgent(originalXlData, agentNames); // Pass the agent names to the function
+    const sfAgentMapping = mapSFMembersToIncidentAgents(
       sfMembers,
       incidentsByAgent
     );
@@ -130,18 +136,22 @@ app.post("/process", upload.single("file"), async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
-function mapIncidentsByAgent(originalXlData) {
+
+const mapIncidentsByAgent = (originalXlData, agentNames) => { // Add a new parameter for the agent names
   const incidentsByAgent = {};
   originalXlData.forEach((incident) => {
     const agent = incident["Taken By"];
-    if (!incidentsByAgent[agent]) {
-      incidentsByAgent[agent] = [];
+    if (agentNames.includes(agent)) { // Only consider incidents by agents in the provided list
+      if (!incidentsByAgent[agent]) {
+        incidentsByAgent[agent] = [];
+      }
+      incidentsByAgent[agent].push(incident);
     }
-    incidentsByAgent[agent].push(incident);
   });
   return incidentsByAgent;
-}
-function mapSFAgentsToIncidentAgents(sfMembers, incidentsByAgent) {
+};
+
+const mapSFMembersToIncidentAgents = (sfMembers, incidentsByAgent) => {
   const sfAgentMapping = {};
   const shuffledAgents = Object.keys(incidentsByAgent).sort(
     () => 0.5 - Math.random()
@@ -153,7 +163,8 @@ function mapSFAgentsToIncidentAgents(sfMembers, incidentsByAgent) {
   });
   return sfAgentMapping;
 }
-function formatRowsForDownload(selectedIncidents) {
+
+const formatRowsForDownload = (selectedIncidents) => {
   const rows = [];
   let previousSFMember = "";
   let previousAgent = "";
@@ -174,13 +185,14 @@ function formatRowsForDownload(selectedIncidents) {
     }
   }
   return rows;
-}
-async function selectIncidentsByConfiguration(
+};
+
+const selectIncidentsByConfiguration = async (
   originalXlData,
   incidentConfigs,
   maxIncidents,
   sfAgentMapping
-) {
+) => {
   const selectedIncidents = {};
   const processedTaskNumbersByAgent = {};
   const processedTaskNumbers = new Set();
@@ -221,12 +233,10 @@ async function selectIncidentsByConfiguration(
       }
     });
   }
-
   return selectedIncidents;
-}
-
+};
 
 app.listen(port, hostname, () => {
-    console.log(`Server running at http://${hostname}:${port}/`);
+  console.log(`Server running at http://${hostname}:${port}/`);
 });
 

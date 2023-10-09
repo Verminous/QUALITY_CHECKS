@@ -102,7 +102,7 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ ...config, sfMembers: sfMembersArray }),
+                body: JSON.stringify({ ...config, sfMembers: sfMembersArray, agentNames: agentAccounts.split('\n') }),
             });
 
             if (response.ok) {
