@@ -16,11 +16,7 @@ app.use(bodyParser.json());
 app.use((req, res, next) => {
   const allowedOrigins = ['http://localhost:8080', `http://${req.hostname}:8080`];
   const origin = req.headers.origin;
-
-  if (origin && allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-
+  if (origin && allowedOrigins.includes(origin)) { res.setHeader('Access-Control-Allow-Origin', origin); }
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Credentials', true);
@@ -41,44 +37,6 @@ app.post("/upload", upload.single("file"), (req, res) => {
   res.json({ agentNames });
 });
 
-const getRandomValue = (options) => {
-  const index = Math.floor(Math.random() * options.length);
-  return options[index];
-}
-
-const getRandomService = () => {
-  return getRandomValue([
-    "EMEIA Workplace",
-    "Secure Internet Gateway (Global SIG)",
-    "Identity and Access Management",
-    "Identity Access Management (Finland)",
-    "M365 Teams",
-    "M365 Email",
-    "M365 Apps",
-    "Software Distribution (SCCM)",
-    "Ask IT",
-    "EMEIA Messaging",
-    "Mobile Phones UK",
-    "ZinZai Connect",
-    "ForcePoint",
-    "Network Service (CE/WEMEIA)",
-    "M365 Sharepoint",
-  ]);
-}
-
-const getRandomContactType = () => {
-  return getRandomValue([
-    "Self-service",
-    "Phone - Unknown User",
-    "Phone",
-    "Chat",
-  ]);
-}
-
-const getRandomFtf = () => {
-  return getRandomValue([true, false]);
-}
-
 app.post("/process", upload.single("file"), async (req, res) => {
   try {
     const config = req.body; /**/ console.log(config);
@@ -87,8 +45,7 @@ app.post("/process", upload.single("file"), async (req, res) => {
     const originalXlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
     const incidentConfigs = config.incidentConfigs;
     const sfMembers = config.sfMembers;
-    const agentNames = req.body.agentNames; // Get the agent names from the request body
-    const incidentsByAgent = mapIncidentsByAgent(originalXlData, agentNames); // Pass the agent names to the function
+    const incidentsByAgent = mapIncidentsByAgent(originalXlData);
     const sfAgentMapping = mapSFMembersToIncidentAgents(
       sfMembers,
       incidentsByAgent
@@ -137,19 +94,17 @@ app.post("/process", upload.single("file"), async (req, res) => {
   }
 });
 
-const mapIncidentsByAgent = (originalXlData, agentNames) => { // Add a new parameter for the agent names
+const mapIncidentsByAgent = (originalXlData) => {
   const incidentsByAgent = {};
   originalXlData.forEach((incident) => {
     const agent = incident["Taken By"];
-    if (agentNames.includes(agent)) { // Only consider incidents by agents in the provided list
-      if (!incidentsByAgent[agent]) {
-        incidentsByAgent[agent] = [];
-      }
-      incidentsByAgent[agent].push(incident);
+    if (!incidentsByAgent[agent]) {
+      incidentsByAgent[agent] = [];
     }
+    incidentsByAgent[agent].push(incident);
   });
   return incidentsByAgent;
-};
+}
 
 const mapSFMembersToIncidentAgents = (sfMembers, incidentsByAgent) => {
   const sfAgentMapping = {};
@@ -187,51 +142,61 @@ const formatRowsForDownload = (selectedIncidents) => {
   return rows;
 };
 
-const selectIncidentsByConfiguration = async (
-  originalXlData,
-  incidentConfigs,
-  maxIncidents,
-  sfAgentMapping
-) => {
+function filterIncidentsByCriterion(incidents, field, value, agent) {
+  if (value === 'RANDOM') {
+      const uniqueValues = [...new Set(incidents.map(incident => incident[field]))];
+      value = uniqueValues.length ? uniqueValues[Math.floor(Math.random() * uniqueValues.length)] : value;
+  }
+  
+  const filtered = incidents.filter(incident => incident[field] === value && incident['Taken By'] === agent);
+  
+  if (!filtered.length) {
+      return incidents.filter(incident => incident['Taken By'] === agent);
+  }
+
+  return filtered;
+}
+
+const selectUniqueIncidentForAgent = (filteredIncidents, processedTaskNumbers, agentTaskNumbers) => {
+  const unassignedIncidents = filteredIncidents.filter(incident =>
+      !processedTaskNumbers.has(incident['Task Number']) &&
+      !agentTaskNumbers.has(incident['Task Number'])
+  );
+  return unassignedIncidents.length ? unassignedIncidents[Math.floor(Math.random() * unassignedIncidents.length)] : null;
+};
+
+async function selectIncidentsByConfiguration(originalXlData, incidentConfigs, maxIncidents, sfAgentMapping) {
   const selectedIncidents = {};
+  const processedTaskNumbers = new Set();
   const processedTaskNumbersByAgent = {};
 
   for (const sfMember in sfAgentMapping) {
-    selectedIncidents[sfMember] = {};
+      selectedIncidents[sfMember] = {};
+      sfAgentMapping[sfMember].forEach(agent => {
+          if (!processedTaskNumbersByAgent[agent]) {
+              processedTaskNumbersByAgent[agent] = new Set();
+          }
+          selectedIncidents[sfMember][agent] = [];
+          for (const incidentConfig of incidentConfigs) {
+              let potentialIncidents = [...originalXlData];
 
-    sfAgentMapping[sfMember].forEach((agent) => {
-      if (!processedTaskNumbersByAgent[agent]) {
-        processedTaskNumbersByAgent[agent] = new Set();
-      }
+              potentialIncidents = filterIncidentsByCriterion(potentialIncidents, 'Service', incidentConfig.service, agent);
+              potentialIncidents = filterIncidentsByCriterion(potentialIncidents, 'Contact type', incidentConfig.contactType, agent);
+              potentialIncidents = filterIncidentsByCriterion(potentialIncidents, 'First time fix', incidentConfig.ftf, agent);
 
-      selectedIncidents[sfMember][agent] = [];
+              const selectedIncident = selectUniqueIncidentForAgent(potentialIncidents, processedTaskNumbers, processedTaskNumbersByAgent[agent]);
 
-      for (const incidentConfig of incidentConfigs) {
-        const filteredIncidents = originalXlData.filter((incident) => {
-          return (
-            !processedTaskNumbersByAgent[agent].has(incident["Task Number"]) &&
-            incident["Taken By"] === agent &&
-            (incidentConfig.service === "RANDOM" || incidentConfig.service === incident["Service"]) &&
-            (incidentConfig.contactType === "RANDOM" || incidentConfig.contactType === incident["Contact type"]) &&
-            (incidentConfig.ftf === "RANDOM" || incidentConfig.ftf === incident["First time fix"])
-          );
-        });
-
-        const toBeSelected = Math.min(
-          filteredIncidents.length,
-          maxIncidents - selectedIncidents[sfMember][agent].length
-        );
-
-        for (let i = 0; i < toBeSelected; i++) {
-          const incident = filteredIncidents[i];
-          selectedIncidents[sfMember][agent].push(incident);
-          processedTaskNumbersByAgent[agent].add(incident["Task Number"]);
-        }
-      }
-    });
+              if (selectedIncident) {
+                  selectedIncidents[sfMember][agent].push(selectedIncident);
+                  processedTaskNumbers.add(selectedIncident['Task Number']);
+                  processedTaskNumbersByAgent[agent].add(selectedIncident['Task Number']);
+              }
+          }
+      });
   }
   return selectedIncidents;
-};
+}
+
 
 app.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`);
