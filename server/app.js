@@ -84,7 +84,7 @@ const mapIncidentsByAgent = (originalXlData) => {
 
 const mapSFMembersToIncidentAgents = (sfMembers, incidentsByAgent) => {
   const sfAgentMapping = {};
-  const shuffledAgents = Object.keys(incidentsByAgent).sort( () => 0.5 - Math.random() );
+  const shuffledAgents = Object.keys(incidentsByAgent).sort(() => 0.5 - Math.random());
   shuffledAgents.forEach((agent, index) => {
     const sfMember = sfMembers[index % sfMembers.length];
     sfAgentMapping[sfMember] = sfAgentMapping[sfMember] ? sfAgentMapping[sfMember] : [];
@@ -116,9 +116,9 @@ const formatRowsForDownload = (selectedIncidents) => {
   return rows;
 };
 
-const filterIncidentsByCriterion = (incidents, field, value, agent) => {
+const filterIncidentsByCriterion = (incidents, field, value, agent, alreadySelected) => { // Add alreadySelected as a parameter
   value = (value === 'RANDOM') ? (new Set(incidents.map(incident => incident[field])).size ? [...new Set(incidents.map(incident => incident[field]))][Math.floor(Math.random() * new Set(incidents.map(incident => incident[field])).size)] : value) : value;
-  const filtered = incidents.filter(incident => incident[field] === value && incident['Taken By'] === agent);
+  const filtered = incidents.filter(incident => !alreadySelected.includes(incident) && incident[field] === value && incident['Taken By'] === agent);
   return filtered.length ? filtered : incidents.filter(incident => incident['Taken By'] === agent);
 }
 
@@ -127,18 +127,17 @@ const selectUniqueIncidentForAgent = (filteredIncidents) => {
 };
 
 const selectIncidentsByConfiguration = async (originalXlData, incidentConfigs, maxIncidents, sfAgentMapping) => {
-  const selectedIncidents = {};
+  const [selectedIncidents, alreadySelected] = [{}, []]
   Object.keys(sfAgentMapping).forEach(sfMember => {
     selectedIncidents[sfMember] = {};
     sfAgentMapping[sfMember].forEach(agent => {
       selectedIncidents[sfMember][agent] = [];
       incidentConfigs.forEach(incidentConfig => {
         let potentialIncidents = [...originalXlData];
-        ['Service', 'Contact type', 'First time fix'].forEach(field => { potentialIncidents = filterIncidentsByCriterion(potentialIncidents, field, incidentConfig[field.toLowerCase()], agent); });
+        ['Service', 'Contact type', 'First time fix'].forEach(field => { potentialIncidents = filterIncidentsByCriterion(potentialIncidents, field, incidentConfig[field.toLowerCase()], agent, selectedIncidents[sfMember][agent], alreadySelected); });
         const selectedIncident = selectUniqueIncidentForAgent(potentialIncidents);
-        selectedIncident ? (
-          selectedIncidents[sfMember][agent].push(selectedIncident)
-        ) : null;
+        selectedIncident ? selectedIncidents[sfMember][agent].push(selectedIncident) : null;
+        selectedIncident ? alreadySelected.push(selectedIncident) : null;
       });
     });
   });
