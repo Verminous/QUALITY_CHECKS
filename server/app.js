@@ -99,8 +99,8 @@ const formatRowsForDownload = (selectedIncidents) => {
   const rows = [];
   let previousSFMember = "";
   let previousAgent = "";
-  for (const sfMember in selectedIncidents) {
-    for (const agent in selectedIncidents[sfMember]) {
+  Object.keys(selectedIncidents).forEach(sfMember => {
+    Object.keys(selectedIncidents[sfMember]).forEach(agent => {
       selectedIncidents[sfMember][agent].forEach((incident) => {
         rows.push({
           "SF Member": previousSFMember === sfMember ? "" : sfMember,
@@ -113,8 +113,8 @@ const formatRowsForDownload = (selectedIncidents) => {
         previousSFMember = previousSFMember !== sfMember ? sfMember : previousSFMember;
         previousAgent = previousAgent !== agent ? agent : previousAgent;
       });
-    }
-  }
+    });
+  });
   return rows;
 };
 
@@ -141,22 +141,24 @@ async function selectIncidentsByConfiguration(originalXlData, incidentConfigs, m
   const selectedIncidents = {};
   const processedTaskNumbers = new Set();
   const processedTaskNumbersByAgent = {};
-  for (const sfMember in sfAgentMapping) {
-      selectedIncidents[sfMember] = {};
-      sfAgentMapping[sfMember].forEach(agent => {
-          processedTaskNumbersByAgent[agent] = processedTaskNumbersByAgent[agent] ? processedTaskNumbersByAgent[agent] : new Set();
-          selectedIncidents[sfMember][agent] = [];
-          for (const incidentConfig of incidentConfigs) {
-              let potentialIncidents = [...originalXlData];
-              potentialIncidents = filterIncidentsByCriterion(potentialIncidents, 'Service', incidentConfig.service, agent);
-              potentialIncidents = filterIncidentsByCriterion(potentialIncidents, 'Contact type', incidentConfig.contactType, agent);
-              potentialIncidents = filterIncidentsByCriterion(potentialIncidents, 'First time fix', incidentConfig.ftf, agent);
-              const selectedIncident = selectUniqueIncidentForAgent(potentialIncidents, processedTaskNumbers, processedTaskNumbersByAgent[agent]);
-              selectedIncident ? selectedIncidents[sfMember][agent].push(selectedIncident) : null;
-              selectedIncident ? processedTaskNumbersByAgent[agent].add(selectedIncident['Task Number']) : null;
-          }
+  Object.keys(sfAgentMapping).forEach(sfMember => {
+    selectedIncidents[sfMember] = {};
+    sfAgentMapping[sfMember].forEach(agent => {
+      processedTaskNumbersByAgent[agent] = processedTaskNumbersByAgent[agent] ? processedTaskNumbersByAgent[agent] : new Set();
+      selectedIncidents[sfMember][agent] = [];
+      incidentConfigs.forEach(incidentConfig => {
+        let potentialIncidents = [...originalXlData];
+        potentialIncidents = filterIncidentsByCriterion(potentialIncidents, 'Service', incidentConfig.service, agent);
+        potentialIncidents = filterIncidentsByCriterion(potentialIncidents, 'Contact type', incidentConfig.contactType, agent);
+        potentialIncidents = filterIncidentsByCriterion(potentialIncidents, 'First time fix', incidentConfig.ftf, agent);
+        const selectedIncident = selectUniqueIncidentForAgent(potentialIncidents, processedTaskNumbers, processedTaskNumbersByAgent[agent]);
+        if (selectedIncident) {
+          selectedIncidents[sfMember][agent].push(selectedIncident);
+          processedTaskNumbersByAgent[agent].add(selectedIncident['Task Number']);
+        }
       });
-  }
+    });
+  });
   return selectedIncidents;
 }
 
