@@ -195,7 +195,6 @@ const selectIncidentsByConfiguration = async (
 ) => {
   const selectedIncidents = {};
   const processedTaskNumbersByAgent = {};
-  const processedTaskNumbers = new Set();
 
   for (const sfMember in sfAgentMapping) {
     selectedIncidents[sfMember] = {};
@@ -210,7 +209,6 @@ const selectIncidentsByConfiguration = async (
       for (const incidentConfig of incidentConfigs) {
         const filteredIncidents = originalXlData.filter((incident) => {
           return (
-            !processedTaskNumbers.has(incident["Task Number"]) &&
             !processedTaskNumbersByAgent[agent].has(incident["Task Number"]) &&
             incident["Taken By"] === agent &&
             (incidentConfig.service === "RANDOM" || incidentConfig.service === incident["Service"]) &&
@@ -227,7 +225,6 @@ const selectIncidentsByConfiguration = async (
         for (let i = 0; i < toBeSelected; i++) {
           const incident = filteredIncidents[i];
           selectedIncidents[sfMember][agent].push(incident);
-          processedTaskNumbers.add(incident["Task Number"]);
           processedTaskNumbersByAgent[agent].add(incident["Task Number"]);
         }
       }
