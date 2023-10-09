@@ -122,26 +122,23 @@ const filterIncidentsByCriterion = (incidents, field, value, agent) => {
   return filtered.length ? filtered : incidents.filter(incident => incident['Taken By'] === agent);
 }
 
-const selectUniqueIncidentForAgent = (filteredIncidents, processedTaskNumbers, agentTaskNumbers) => {
-  const unassignedIncidents = filteredIncidents.filter(incident => !agentTaskNumbers.has(incident['Task Number']) );
-  return unassignedIncidents.length ? unassignedIncidents[Math.floor(Math.random() * unassignedIncidents.length)] : null;
+const selectUniqueIncidentForAgent = (filteredIncidents) => {
+  return filteredIncidents.length ? filteredIncidents[Math.floor(Math.random() * filteredIncidents.length)] : null;
 };
 
 const selectIncidentsByConfiguration = async (originalXlData, incidentConfigs, maxIncidents, sfAgentMapping) => {
   const selectedIncidents = {};
-  const processedTaskNumbers = new Set();
-  const processedTaskNumbersByAgent = {};
   Object.keys(sfAgentMapping).forEach(sfMember => {
     selectedIncidents[sfMember] = {};
     sfAgentMapping[sfMember].forEach(agent => {
-      processedTaskNumbersByAgent[agent] = processedTaskNumbersByAgent[agent] ? processedTaskNumbersByAgent[agent] : new Set();
       selectedIncidents[sfMember][agent] = [];
       incidentConfigs.forEach(incidentConfig => {
         let potentialIncidents = [...originalXlData];
         ['Service', 'Contact type', 'First time fix'].forEach(field => { potentialIncidents = filterIncidentsByCriterion(potentialIncidents, field, incidentConfig[field.toLowerCase()], agent); });
-        const selectedIncident = selectUniqueIncidentForAgent(potentialIncidents, processedTaskNumbers, processedTaskNumbersByAgent[agent]);
-        selectedIncident ? selectedIncidents[sfMember][agent].push(selectedIncident) : null;
-        selectedIncident ? processedTaskNumbersByAgent[agent].add(selectedIncident['Task Number']) : null;
+        const selectedIncident = selectUniqueIncidentForAgent(potentialIncidents);
+        selectedIncident ? (
+          selectedIncidents[sfMember][agent].push(selectedIncident)
+        ) : null;
       });
     });
   });
