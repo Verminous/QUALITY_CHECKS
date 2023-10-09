@@ -116,33 +116,41 @@ const formatRowsForDownload = (selectedIncidents) => {
   return rows;
 };
 
-const filterIncidentsByCriterion = (incidents, field, value, agent, alreadySelected) => { // Add alreadySelected as a parameter
-  value = (value === 'RANDOM') ? (new Set(incidents.map(incident => incident[field])).size ? [...new Set(incidents.map(incident => incident[field]))][Math.floor(Math.random() * new Set(incidents.map(incident => incident[field])).size)] : value) : value;
-  const filtered = incidents.filter(incident => !alreadySelected.includes(incident) && incident[field] === value && incident['Taken By'] === agent);
-  return filtered.length ? filtered : incidents.filter(incident => incident['Taken By'] === agent);
-}
-
-const selectUniqueIncidentForAgent = (filteredIncidents) => {
-  return filteredIncidents.length ? filteredIncidents[Math.floor(Math.random() * filteredIncidents.length)] : null;
-};
-
 const selectIncidentsByConfiguration = async (originalXlData, incidentConfigs, maxIncidents, sfAgentMapping) => {
-  const [selectedIncidents, alreadySelected] = [{}, []]
+  const selectedIncidents = {};
+  const alreadySelected = {};
   Object.keys(sfAgentMapping).forEach(sfMember => {
     selectedIncidents[sfMember] = {};
     sfAgentMapping[sfMember].forEach(agent => {
       selectedIncidents[sfMember][agent] = [];
-      incidentConfigs.forEach(incidentConfig => {
+      alreadySelected[agent] = new Set();
+      Array(maxIncidents).fill().forEach((_, i) => {
+        const incidentConfig = incidentConfigs[i % incidentConfigs.length];
         let potentialIncidents = [...originalXlData];
-        ['Service', 'Contact type', 'First time fix'].forEach(field => { potentialIncidents = filterIncidentsByCriterion(potentialIncidents, field, incidentConfig[field.toLowerCase()], agent, selectedIncidents[sfMember][agent], alreadySelected); });
-        const selectedIncident = selectUniqueIncidentForAgent(potentialIncidents);
-        selectedIncident ? selectedIncidents[sfMember][agent].push(selectedIncident) : null;
-        selectedIncident ? alreadySelected.push(selectedIncident) : null;
+        ['Service', 'Contact type', 'First time fix'].forEach(field => { potentialIncidents = filterIncidentsByCriterion(potentialIncidents, field, incidentConfig[field.toLowerCase()], agent, alreadySelected[agent]); });
+        const selectedIncident = selectUniqueIncidentForAgent(potentialIncidents, alreadySelected[agent]);
+        selectedIncident ? (selectedIncidents[sfMember][agent].push(selectedIncident), alreadySelected[agent].add(selectedIncident)) : null;
       });
     });
   });
   return selectedIncidents;
 }
+
+const filterIncidentsByCriterion = (incidents, field, value, agent, alreadySelected) => {
+  value = (value === 'RANDOM') ? getRandomValue(incidents, field) : value;
+  const filtered = incidents.filter(incident => !alreadySelected.has(incident) && incident[field] === value && incident['Taken By'] === agent);
+  return filtered.length ? filtered : incidents.filter(incident => incident['Taken By'] === agent);
+}
+
+const getRandomValue = (incidents, field) => {
+  const values = [...new Set(incidents.map(incident => incident[field]))];
+  return values[Math.floor(Math.random() * values.length)];
+}
+
+const selectUniqueIncidentForAgent = (filteredIncidents, alreadySelected) => {
+  const uniqueIncidents = filteredIncidents.filter(incident => !alreadySelected.has(incident));
+  return uniqueIncidents.length ? uniqueIncidents[Math.floor(Math.random() * uniqueIncidents.length)] : null;
+};
 
 app.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`);
