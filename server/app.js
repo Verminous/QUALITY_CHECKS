@@ -84,9 +84,7 @@ const mapIncidentsByAgent = (originalXlData) => {
 
 const mapSFMembersToIncidentAgents = (sfMembers, incidentsByAgent) => {
   const sfAgentMapping = {};
-  const shuffledAgents = Object.keys(incidentsByAgent).sort(
-    () => 0.5 - Math.random()
-  );
+  const shuffledAgents = Object.keys(incidentsByAgent).sort( () => 0.5 - Math.random() );
   shuffledAgents.forEach((agent, index) => {
     const sfMember = sfMembers[index % sfMembers.length];
     sfAgentMapping[sfMember] = sfAgentMapping[sfMember] ? sfAgentMapping[sfMember] : [];
@@ -118,26 +116,18 @@ const formatRowsForDownload = (selectedIncidents) => {
   return rows;
 };
 
-function filterIncidentsByCriterion(incidents, field, value, agent) {
-  value = value === 'RANDOM' ? 
-    (new Set(incidents.map(incident => incident[field]))).size ? 
-      [...new Set(incidents.map(incident => incident[field]))][Math.floor(Math.random() * [...new Set(incidents.map(incident => incident[field]))].length)] 
-      : value 
-    : value;
+const filterIncidentsByCriterion = (incidents, field, value, agent) => {
+  value = (value === 'RANDOM') ? (new Set(incidents.map(incident => incident[field])).size ? [...new Set(incidents.map(incident => incident[field]))][Math.floor(Math.random() * new Set(incidents.map(incident => incident[field])).size)] : value) : value;
   const filtered = incidents.filter(incident => incident[field] === value && incident['Taken By'] === agent);
-  return !filtered.length ? 
-    incidents.filter(incident => incident['Taken By'] === agent) 
-    : filtered;
+  return filtered.length ? filtered : incidents.filter(incident => incident['Taken By'] === agent);
 }
 
 const selectUniqueIncidentForAgent = (filteredIncidents, processedTaskNumbers, agentTaskNumbers) => {
-  const unassignedIncidents = filteredIncidents.filter(incident =>
-      !agentTaskNumbers.has(incident['Task Number'])
-  );
+  const unassignedIncidents = filteredIncidents.filter(incident => !agentTaskNumbers.has(incident['Task Number']) );
   return unassignedIncidents.length ? unassignedIncidents[Math.floor(Math.random() * unassignedIncidents.length)] : null;
 };
 
-async function selectIncidentsByConfiguration(originalXlData, incidentConfigs, maxIncidents, sfAgentMapping) {
+const selectIncidentsByConfiguration = async (originalXlData, incidentConfigs, maxIncidents, sfAgentMapping) => {
   const selectedIncidents = {};
   const processedTaskNumbers = new Set();
   const processedTaskNumbersByAgent = {};
@@ -148,14 +138,10 @@ async function selectIncidentsByConfiguration(originalXlData, incidentConfigs, m
       selectedIncidents[sfMember][agent] = [];
       incidentConfigs.forEach(incidentConfig => {
         let potentialIncidents = [...originalXlData];
-        potentialIncidents = filterIncidentsByCriterion(potentialIncidents, 'Service', incidentConfig.service, agent);
-        potentialIncidents = filterIncidentsByCriterion(potentialIncidents, 'Contact type', incidentConfig.contactType, agent);
-        potentialIncidents = filterIncidentsByCriterion(potentialIncidents, 'First time fix', incidentConfig.ftf, agent);
+        ['Service', 'Contact type', 'First time fix'].forEach(field => { potentialIncidents = filterIncidentsByCriterion(potentialIncidents, field, incidentConfig[field.toLowerCase()], agent); });
         const selectedIncident = selectUniqueIncidentForAgent(potentialIncidents, processedTaskNumbers, processedTaskNumbersByAgent[agent]);
-        if (selectedIncident) {
-          selectedIncidents[sfMember][agent].push(selectedIncident);
-          processedTaskNumbersByAgent[agent].add(selectedIncident['Task Number']);
-        }
+        selectedIncident ? selectedIncidents[sfMember][agent].push(selectedIncident) : null;
+        selectedIncident ? processedTaskNumbersByAgent[agent].add(selectedIncident['Task Number']) : null;
       });
     });
   });
