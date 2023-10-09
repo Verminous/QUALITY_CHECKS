@@ -2,7 +2,6 @@ const express = require("express");
 const multer = require("multer");
 const xlsx = require("xlsx");
 const bodyParser = require("body-parser");
-const fs = require("fs");
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 const app = express();
@@ -142,7 +141,6 @@ async function selectIncidentsByConfiguration(originalXlData, incidentConfigs, m
   const selectedIncidents = {};
   const processedTaskNumbers = new Set();
   const processedTaskNumbersByAgent = {};
-
   for (const sfMember in sfAgentMapping) {
       selectedIncidents[sfMember] = {};
       sfAgentMapping[sfMember].forEach(agent => {
@@ -150,13 +148,10 @@ async function selectIncidentsByConfiguration(originalXlData, incidentConfigs, m
           selectedIncidents[sfMember][agent] = [];
           for (const incidentConfig of incidentConfigs) {
               let potentialIncidents = [...originalXlData];
-
               potentialIncidents = filterIncidentsByCriterion(potentialIncidents, 'Service', incidentConfig.service, agent);
               potentialIncidents = filterIncidentsByCriterion(potentialIncidents, 'Contact type', incidentConfig.contactType, agent);
               potentialIncidents = filterIncidentsByCriterion(potentialIncidents, 'First time fix', incidentConfig.ftf, agent);
-
               const selectedIncident = selectUniqueIncidentForAgent(potentialIncidents, processedTaskNumbers, processedTaskNumbersByAgent[agent]);
-
               selectedIncident ? selectedIncidents[sfMember][agent].push(selectedIncident) : null;
               selectedIncident ? processedTaskNumbersByAgent[agent].add(selectedIncident['Task Number']) : null;
           }
@@ -164,7 +159,6 @@ async function selectIncidentsByConfiguration(originalXlData, incidentConfigs, m
   }
   return selectedIncidents;
 }
-
 
 app.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`);
