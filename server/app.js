@@ -2,7 +2,6 @@ const express = require("express");
 const multer = require("multer");
 const xlsx = require("xlsx");
 const bodyParser = require("body-parser");
-const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
@@ -16,7 +15,7 @@ app.use(bodyParser.json());
 app.use((req, res, next) => {
   const allowedOrigins = ['http://localhost:8080', `http://${req.hostname}:8080`];
   const origin = req.headers.origin;
-  if (origin && allowedOrigins.includes(origin)) { res.setHeader('Access-Control-Allow-Origin', origin); }
+  origin && allowedOrigins.includes(origin) ? res.setHeader('Access-Control-Allow-Origin', origin) : null;
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Credentials', true);
@@ -37,24 +36,6 @@ app.post("/upload", upload.single("file"), (req, res) => {
   res.json({ agentNames });
 });
 
-const createAndWriteWorksheet = (workbook, rows) => {
-  const newWorksheet = xlsx.utils.json_to_sheet(rows);
-  if (!workbook.Sheets["Processed List"]) {
-    xlsx.utils.book_append_sheet(workbook, newWorksheet, "Processed List");
-  } else {
-    workbook.Sheets["Processed List"] = newWorksheet;
-  }
-  const newFilePath = path.join(__dirname, "uploads", process.env.SERV_FILENAME);
-  xlsx.writeFile(workbook, newFilePath);
-  return newFilePath;
-};
-
-const downloadFile = (res, newFilePath) => {
-  res.download(newFilePath, "AskIT - QCH_processed.xlsx", function (err) {
-    if (err) throw new Error("Error sending the file: " + err);
-  });
-};
-
 app.post("/process", upload.single("file"), async (req, res) => {
   try {
     const config = req.body;
@@ -73,18 +54,30 @@ app.post("/process", upload.single("file"), async (req, res) => {
   } catch (error) {
     console.error("Error in /process:", error);
     console.error("Request body:", req.body);
-    if (lastUploadedFilePath) console.error("Last uploaded file path:", lastUploadedFilePath);
+    lastUploadedFilePath ? console.error("Last uploaded file path:", lastUploadedFilePath) : null;
     res.status(500).send("Internal Server Error");
   }
 });
+
+const createAndWriteWorksheet = (workbook, rows) => {
+  const newWorksheet = xlsx.utils.json_to_sheet(rows);
+  workbook.Sheets["Processed List"] ? workbook.Sheets["Processed List"] = newWorksheet : xlsx.utils.book_append_sheet(workbook, newWorksheet, "Processed List");
+  const newFilePath = path.join(__dirname, "uploads", process.env.SERV_FILENAME);
+  xlsx.writeFile(workbook, newFilePath);
+  return newFilePath;
+};
+
+const downloadFile = (res, newFilePath) => {
+  res.download(newFilePath, "AskIT - QCH_processed.xlsx", function (err) {
+    if (err) throw new Error("Error sending the file: " + err);
+  });
+};
 
 const mapIncidentsByAgent = (originalXlData) => {
   const incidentsByAgent = {};
   originalXlData.forEach((incident) => {
     const agent = incident["Taken By"];
-    if (!incidentsByAgent[agent]) {
-      incidentsByAgent[agent] = [];
-    }
+    incidentsByAgent[agent] = incidentsByAgent[agent] ? incidentsByAgent[agent] : [];
     incidentsByAgent[agent].push(incident);
   });
   return incidentsByAgent;
@@ -97,7 +90,7 @@ const mapSFMembersToIncidentAgents = (sfMembers, incidentsByAgent) => {
   );
   shuffledAgents.forEach((agent, index) => {
     const sfMember = sfMembers[index % sfMembers.length];
-    if (!sfAgentMapping[sfMember]) sfAgentMapping[sfMember] = [];
+    sfAgentMapping[sfMember] = sfAgentMapping[sfMember] ? sfAgentMapping[sfMember] : [];
     sfAgentMapping[sfMember].push(agent);
   });
   return sfAgentMapping;
@@ -118,8 +111,8 @@ const formatRowsForDownload = (selectedIncidents) => {
           "Contact type": incident["Contact type"],
           "First time fix": incident["First time fix"],
         });
-        if (previousSFMember !== sfMember) previousSFMember = sfMember;
-        if (previousAgent !== agent) previousAgent = agent;
+        previousSFMember = previousSFMember !== sfMember ? sfMember : previousSFMember;
+        previousAgent = previousAgent !== agent ? agent : previousAgent;
       });
     }
   }
@@ -127,18 +120,15 @@ const formatRowsForDownload = (selectedIncidents) => {
 };
 
 function filterIncidentsByCriterion(incidents, field, value, agent) {
-  if (value === 'RANDOM') {
-      const uniqueValues = [...new Set(incidents.map(incident => incident[field]))];
-      value = uniqueValues.length ? uniqueValues[Math.floor(Math.random() * uniqueValues.length)] : value;
-  }
-  
+  value = value === 'RANDOM' ? 
+    (new Set(incidents.map(incident => incident[field]))).size ? 
+      [...new Set(incidents.map(incident => incident[field]))][Math.floor(Math.random() * [...new Set(incidents.map(incident => incident[field]))].length)] 
+      : value 
+    : value;
   const filtered = incidents.filter(incident => incident[field] === value && incident['Taken By'] === agent);
-  
-  if (!filtered.length) {
-      return incidents.filter(incident => incident['Taken By'] === agent);
-  }
-
-  return filtered;
+  return !filtered.length ? 
+    incidents.filter(incident => incident['Taken By'] === agent) 
+    : filtered;
 }
 
 const selectUniqueIncidentForAgent = (filteredIncidents, processedTaskNumbers, agentTaskNumbers) => {
@@ -156,9 +146,7 @@ async function selectIncidentsByConfiguration(originalXlData, incidentConfigs, m
   for (const sfMember in sfAgentMapping) {
       selectedIncidents[sfMember] = {};
       sfAgentMapping[sfMember].forEach(agent => {
-          if (!processedTaskNumbersByAgent[agent]) {
-              processedTaskNumbersByAgent[agent] = new Set();
-          }
+          processedTaskNumbersByAgent[agent] = processedTaskNumbersByAgent[agent] ? processedTaskNumbersByAgent[agent] : new Set();
           selectedIncidents[sfMember][agent] = [];
           for (const incidentConfig of incidentConfigs) {
               let potentialIncidents = [...originalXlData];
@@ -169,10 +157,8 @@ async function selectIncidentsByConfiguration(originalXlData, incidentConfigs, m
 
               const selectedIncident = selectUniqueIncidentForAgent(potentialIncidents, processedTaskNumbers, processedTaskNumbersByAgent[agent]);
 
-              if (selectedIncident) {
-                  selectedIncidents[sfMember][agent].push(selectedIncident);
-                  processedTaskNumbersByAgent[agent].add(selectedIncident['Task Number']);
-              }
+              selectedIncident ? selectedIncidents[sfMember][agent].push(selectedIncident) : null;
+              selectedIncident ? processedTaskNumbersByAgent[agent].add(selectedIncident['Task Number']) : null;
           }
       });
   }
