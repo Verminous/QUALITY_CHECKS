@@ -57,12 +57,11 @@ const selectIncidentsByConfiguration = async (originalXlData, incidentConfigs, m
     sfAgentMapping[sfMember].forEach(agent => {
       selectedIncidents[sfMember][agent] = [];
       alreadySelected[agent] = new Set();
-      Array(maxIncidents).fill().forEach((_, i) => {
+      Array(maxIncidents).fill().map((_, i) => {
         const incidentConfig = incidentConfigs[i % incidentConfigs.length];
-        let potentialIncidents = [...originalXlData];
-        ['Service', 'Contact type', 'First time fix'].forEach(field => { potentialIncidents = filterIncidentsByCriterion(potentialIncidents, field, incidentConfig[field.toLowerCase()], agent, alreadySelected[agent]); });
+        const potentialIncidents = ['Service', 'Contact type', 'First time fix'].reduce( (incidents, field) => filterIncidentsByCriterion(incidents, field, incidentConfig[field.toLowerCase()], agent, alreadySelected[agent]), [...originalXlData] );
         const selectedIncident = selectUniqueIncidentForAgent(potentialIncidents, alreadySelected[agent]);
-        selectedIncident ? (selectedIncidents[sfMember][agent].push(selectedIncident), alreadySelected[agent].add(selectedIncident)) : null;
+        selectedIncident && (selectedIncidents[sfMember][agent].push(selectedIncident), alreadySelected[agent].add(selectedIncident));
       });
     });
   });
