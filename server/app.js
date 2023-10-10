@@ -51,8 +51,7 @@ app.post("/process", upload.single("file"), async ({ body: config }, res) => {
 });
 
 const selectIncidentsByConfiguration = async (originalXlData, incidentConfigs, maxIncidents, sfAgentMapping) => {
-  const selectedIncidents = {};
-  const alreadySelected = {};
+  const [selectedIncidents, alreadySelected] = [{}, {}];
   Object.keys(sfAgentMapping).forEach(sfMember => {
     selectedIncidents[sfMember] = {};
     sfAgentMapping[sfMember].forEach(agent => {
@@ -71,13 +70,12 @@ const selectIncidentsByConfiguration = async (originalXlData, incidentConfigs, m
 }
 
 const mapIncidentsByAgent = (originalXlData) => {
-  const incidentsByAgent = {};
-  originalXlData.forEach((incident) => {
+  return originalXlData.reduce((incidentsByAgent, incident) => {
     const agent = incident["Taken By"];
     incidentsByAgent[agent] = incidentsByAgent[agent] ? incidentsByAgent[agent] : [];
     incidentsByAgent[agent].push(incident);
-  });
-  return incidentsByAgent;
+    return incidentsByAgent;
+  }, {});
 }
 
 const mapSFMembersToIncidentAgents = (sfMembers, incidentsByAgent) => {
@@ -92,6 +90,7 @@ const mapSFMembersToIncidentAgents = (sfMembers, incidentsByAgent) => {
 }
 
 const filterIncidentsByCriterion = (incidents, field, value, agent, alreadySelected) => {
+  incidents = fisherYatesShuffle(incidents);
   value = (value === 'RANDOM') ? getRandomValue(incidents, field) : value;
   const filtered = incidents.filter(incident => !alreadySelected.has(incident) && incident[field] === value && incident['Taken By'] === agent);
   return filtered.length ? filtered : incidents.filter(incident => incident['Taken By'] === agent);
@@ -101,6 +100,11 @@ const getRandomValue = (incidents, field) => {
   const values = [...new Set(incidents.map(incident => incident[field]))];
   return values[Math.floor(Math.random() * values.length)];
 }
+
+const fisherYatesShuffle = array => {
+  array.forEach((element, i) => { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; });
+  return array;
+};
 
 const selectUniqueIncidentForAgent = (filteredIncidents, alreadySelected) => {
   const uniqueIncidents = filteredIncidents.filter(incident => !alreadySelected.has(incident));
@@ -116,30 +120,28 @@ const createAndWriteWorksheet = (workbook, rows) => {
 };
 
 const formatRowsForDownload = (selectedIncidents) => {
-  const rows = [];
-  let previousSFMember = "";
-  let previousAgent = "";
-  Object.keys(selectedIncidents).forEach(sfMember => {
-    Object.keys(selectedIncidents[sfMember]).forEach(agent => {
-      selectedIncidents[sfMember][agent].forEach((incident) => {
-        rows.push({
+  let [previousSFMember,previousAgent] = [""];
+  return Object.keys(selectedIncidents).map(sfMember => {
+    return Object.keys(selectedIncidents[sfMember]).map(agent => {
+      return selectedIncidents[sfMember][agent].map((incident) => {
+        const row = {
           "SF Member": previousSFMember === sfMember ? "" : sfMember,
           Agent: previousAgent === agent ? "" : agent,
           "Task Number": incident["Task Number"],
           Service: incident["Service"],
           "Contact type": incident["Contact type"],
           "First time fix": incident["First time fix"],
-        });
+        };
         previousSFMember = previousSFMember !== sfMember ? sfMember : previousSFMember;
         previousAgent = previousAgent !== agent ? agent : previousAgent;
+        return row;
       });
-    });
-  });
-  return rows;
+    }).flat();
+  }).flat();
 };
 
 const downloadFile = (res, newFilePath) => {
-  res.download(newFilePath, "AskIT - QCH_processed.xlsx", function (err) {
+  res.download(newFilePath, "AskIT - QCH_processed.xlsx", (err) => {
     if (err) throw new Error("Error sending the file: " + err);
   });
 };
