@@ -117,11 +117,11 @@ const createAndWriteWorksheet = (workbook, rows) => {
   return newFilePath;
 };
 
-const formatRowsForDownload = (selectedIncidents) => {
-  let [previousSFMember,previousAgent] = [""];
-  return Object.keys(selectedIncidents).map(sfMember => {
-    return Object.keys(selectedIncidents[sfMember]).map(agent => {
-      return selectedIncidents[sfMember][agent].map((incident) => {
+const formatRowsForDownload = selectedIncidents => {
+  let [previousSFMember, previousAgent] = [""];
+  return Object.keys(selectedIncidents).flatMap(sfMember => 
+    Object.keys(selectedIncidents[sfMember]).flatMap(agent => 
+      selectedIncidents[sfMember][agent].map(incident => {
         const row = {
           "SF Member": previousSFMember === sfMember ? "" : sfMember,
           Agent: previousAgent === agent ? "" : agent,
@@ -130,12 +130,11 @@ const formatRowsForDownload = (selectedIncidents) => {
           "Contact type": incident["Contact type"],
           "First time fix": incident["First time fix"],
         };
-        previousSFMember = previousSFMember !== sfMember ? sfMember : previousSFMember;
-        previousAgent = previousAgent !== agent ? agent : previousAgent;
+        [previousSFMember, previousAgent] = [previousSFMember !== sfMember ? sfMember : previousSFMember, previousAgent !== agent ? agent : previousAgent];
         return row;
-      });
-    }).flat();
-  }).flat();
+      })
+    )
+  );
 };
 
 const downloadFile = (res, newFilePath) => {
