@@ -1,11 +1,4 @@
-const express = require("express"),
-  multer = require("multer"),
-  xlsx = require("xlsx"),
-  bodyParser = require("body-parser"),
-  path = require("path"),
-  app = express(),
-  upload = multer({ dest: "uploads/" });
-
+const express = require("express"), multer = require("multer"), xlsx = require("xlsx"), bodyParser = require("body-parser"), path = require("path"), app = express(), upload = multer({ dest: "uploads/" });
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 const { UI_PORT: uiPort, SERV_PORT: port, HOSTNAME: hostname, SERV_FILENAME: filename } = process.env;
 
@@ -21,10 +14,9 @@ app.use(({headers: {origin}}, res, next) => {
 app.get("/", (req, res) => res.send("Server running!"));
 
 let lastUploadedFilePath;
-app.post("/upload", upload.single("file"), ({ file: { path } }, res) => {
-  lastUploadedFilePath = path;
-  const agentNames = [...new Set(xlsx.utils.sheet_to_json(xlsx.readFile(lastUploadedFilePath).Sheets[xlsx.readFile(lastUploadedFilePath).SheetNames[0]]).map(data => data["Taken By"]))];
-  res.json({ agentNames });
+app.post("/upload", upload.single("file"), ({ file: { path: p } }, res) => {
+  lastUploadedFilePath = p;
+  res.json({ agentNames: [...new Set(xlsx.utils.sheet_to_json(xlsx.readFile(p).Sheets[xlsx.readFile(p).SheetNames[0]]).map(data => data["Taken By"]))] });
 });
 
 app.post("/process", upload.single("file"), async ({ body: config }, res) => {
