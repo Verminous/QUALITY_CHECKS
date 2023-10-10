@@ -31,14 +31,14 @@ app.post("/upload", upload.single("file"), ({file: {path}}, res) => {
 
 app.post("/process", upload.single("file"), async ({ body: config }, res) => {
   try {
-    const workbook = xlsx.readFile(lastUploadedFilePath);
-    const sheetName = workbook.SheetNames[0];
-    const originalXlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
-    const { incidentConfigs, sfMembers, incidentsPerAgent } = config;
-    const incidentsByAgent = mapIncidentsByAgent(originalXlData);
-    const sfAgentMapping = mapSFMembersToIncidentAgents(sfMembers, incidentsByAgent);
-    const selectedIncidents = await selectIncidentsByConfiguration(originalXlData, incidentConfigs, incidentsPerAgent, sfAgentMapping);
-    const rows = formatRowsForDownload(selectedIncidents);
+    const workbook = xlsx.readFile(lastUploadedFilePath),
+          sheetName = workbook.SheetNames[0],
+          originalXlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]),
+          { incidentConfigs, sfMembers, incidentsPerAgent } = config,
+          incidentsByAgent = mapIncidentsByAgent(originalXlData),
+          sfAgentMapping = mapSFMembersToIncidentAgents(sfMembers, incidentsByAgent),
+          selectedIncidents = await selectIncidentsByConfiguration(originalXlData, incidentConfigs, incidentsPerAgent, sfAgentMapping),
+          rows = formatRowsForDownload(selectedIncidents);
     if (rows.length < incidentsPerAgent) throw new Error("Not enough incidents matched the provided configuration");
     const newFilePath = createAndWriteWorksheet(workbook, rows);
     downloadFile(res, newFilePath);
@@ -99,7 +99,7 @@ const getRandomValue = (incidents, field) => {
 }
 
 const fisherYatesShuffle = array => {
-  array.forEach((element, i) => { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; });
+  array.forEach((i) => { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; });
   return array;
 };
 
