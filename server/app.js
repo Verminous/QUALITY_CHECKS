@@ -20,24 +20,8 @@ app.post("/upload", upload.single("file"), ({ file: { path: p } }, res) => {
 });
 
 app.post("/process", upload.single("file"), async ({ body: config }, res) => {
-  try {
-    const workbook = xlsx.readFile(lastUploadedFilePath),
-      sheetName = workbook.SheetNames[0],
-      originalXlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]),
-      { incidentConfigs, sfMembers, incidentsPerAgent } = config,
-      incidentsByAgent = mapIncidentsByAgent(originalXlData),
-      sfAgentMapping = mapSFMembersToIncidentAgents(sfMembers, incidentsByAgent),
-      selectedIncidents = await selectIncidentsByConfiguration(originalXlData, incidentConfigs, incidentsPerAgent, sfAgentMapping),
-      rows = formatRowsForDownload(selectedIncidents);
-    if (rows.length < incidentsPerAgent) throw new Error("Not enough incidents matched the provided configuration");
-    const newFilePath = createAndWriteWorksheet(workbook, rows);
-    downloadFile(res, newFilePath);
-  } catch (error) {
-    console.error("Error in /process:", error);
-    console.error("Request body:", config);
-    lastUploadedFilePath && console.error("Last uploaded file path:", lastUploadedFilePath);
-    res.status(500).send("Internal Server Error");
-  }
+  try { const workbook = xlsx.readFile(lastUploadedFilePath), { incidentConfigs, sfMembers, incidentsPerAgent } = config, selectedIncidents = await selectIncidentsByConfiguration(xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]), incidentConfigs, incidentsPerAgent, mapSFMembersToIncidentAgents(sfMembers, mapIncidentsByAgent(originalXlData = xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]])))), rows = formatRowsForDownload(selectedIncidents); if (rows.length < incidentsPerAgent) { throw new Error("Not enough incidents matched the provided configuration"); } else { downloadFile(res, createAndWriteWorksheet(workbook, rows)); } } 
+  catch (error) { console.error("Error in /process:", error, "Request body:", config, lastUploadedFilePath && "Last uploaded file path:", lastUploadedFilePath); res.status(500).send("Internal Server Error"); }
 });
 
 const selectIncidentsByConfiguration = async (originalXlData, incidentConfigs, maxIncidents, sfAgentMapping) => {
