@@ -1,29 +1,27 @@
 const express = require("express"),
-      multer = require("multer"),
-      xlsx = require("xlsx"),
-      bodyParser = require("body-parser"),
-      path = require("path"),
-      app = express(),
-      upload = multer({ dest: "uploads/" });
+  multer = require("multer"),
+  xlsx = require("xlsx"),
+  bodyParser = require("body-parser"),
+  path = require("path"),
+  app = express(),
+  upload = multer({ dest: "uploads/" });
 
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 const { UI_PORT: uiPort, SERV_PORT: port, HOSTNAME: hostname, SERV_FILENAME: filename } = process.env;
 
 app.use(bodyParser.json());
 
-app.use((req, res, next) => {
-  const { origin } = req.headers,
-   allowedOrigins = [`http://localhost:${uiPort}`, `http://${req.hostname}:${uiPort}`];
-  origin && allowedOrigins.includes(origin) && res.setHeader('Access-Control-Allow-Origin', origin);
-  ['Access-Control-Allow-Methods', 'Access-Control-Allow-Headers', 'Access-Control-Allow-Credentials'].forEach(header => 
-    res.header(header, header === 'Access-Control-Allow-Credentials' ? true : header === 'Access-Control-Allow-Methods' ? 'GET, POST, PUT, DELETE' : 'Content-Type, Authorization'));
+app.use(({headers: {origin}}, res, next) => {
+  const allowed = [`http://localhost:${uiPort}`, `http://${hostname}:${uiPort}`];
+  allowed.includes(origin) && res.setHeader('Access-Control-Allow-Origin', origin);
+  ['Methods', 'Headers', 'Credentials'].forEach(h => res.header(`Access-Control-Allow-${h}`, h == 'Credentials' ? true : h == 'Methods' ? 'GET, POST, PUT, DELETE' : 'Content-Type, Authorization'));
   next();
 });
 
 app.get("/", (req, res) => res.send("Server running!"));
 
 let lastUploadedFilePath;
-app.post("/upload", upload.single("file"), ({file: {path}}, res) => {
+app.post("/upload", upload.single("file"), ({ file: { path } }, res) => {
   lastUploadedFilePath = path;
   const agentNames = [...new Set(xlsx.utils.sheet_to_json(xlsx.readFile(lastUploadedFilePath).Sheets[xlsx.readFile(lastUploadedFilePath).SheetNames[0]]).map(data => data["Taken By"]))];
   res.json({ agentNames });
@@ -32,13 +30,13 @@ app.post("/upload", upload.single("file"), ({file: {path}}, res) => {
 app.post("/process", upload.single("file"), async ({ body: config }, res) => {
   try {
     const workbook = xlsx.readFile(lastUploadedFilePath),
-          sheetName = workbook.SheetNames[0],
-          originalXlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]),
-          { incidentConfigs, sfMembers, incidentsPerAgent } = config,
-          incidentsByAgent = mapIncidentsByAgent(originalXlData),
-          sfAgentMapping = mapSFMembersToIncidentAgents(sfMembers, incidentsByAgent),
-          selectedIncidents = await selectIncidentsByConfiguration(originalXlData, incidentConfigs, incidentsPerAgent, sfAgentMapping),
-          rows = formatRowsForDownload(selectedIncidents);
+      sheetName = workbook.SheetNames[0],
+      originalXlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]),
+      { incidentConfigs, sfMembers, incidentsPerAgent } = config,
+      incidentsByAgent = mapIncidentsByAgent(originalXlData),
+      sfAgentMapping = mapSFMembersToIncidentAgents(sfMembers, incidentsByAgent),
+      selectedIncidents = await selectIncidentsByConfiguration(originalXlData, incidentConfigs, incidentsPerAgent, sfAgentMapping),
+      rows = formatRowsForDownload(selectedIncidents);
     if (rows.length < incidentsPerAgent) throw new Error("Not enough incidents matched the provided configuration");
     const newFilePath = createAndWriteWorksheet(workbook, rows);
     downloadFile(res, newFilePath);
@@ -59,8 +57,8 @@ const selectIncidentsByConfiguration = async (originalXlData, incidentConfigs, m
       alreadySelected[agent] = new Set();
       Array(maxIncidents).fill().map((_, i) => {
         const incidentConfig = incidentConfigs[i % incidentConfigs.length],
-         potentialIncidents = ['Service', 'Contact type', 'First time fix'].reduce( (incidents, field) => filterIncidentsByCriterion(incidents, field, incidentConfig[field.toLowerCase()], agent, alreadySelected[agent]), [...originalXlData] ),
-         selectedIncident = selectUniqueIncidentForAgent(potentialIncidents, alreadySelected[agent]);
+          potentialIncidents = ['Service', 'Contact type', 'First time fix'].reduce((incidents, field) => filterIncidentsByCriterion(incidents, field, incidentConfig[field.toLowerCase()], agent, alreadySelected[agent]), [...originalXlData]),
+          selectedIncident = selectUniqueIncidentForAgent(potentialIncidents, alreadySelected[agent]);
         selectedIncident && (selectedIncidents[sfMember][agent].push(selectedIncident), alreadySelected[agent].add(selectedIncident));
       });
     });
@@ -68,14 +66,13 @@ const selectIncidentsByConfiguration = async (originalXlData, incidentConfigs, m
   return selectedIncidents;
 }
 
-const mapIncidentsByAgent = (originalXlData) => {
-  return originalXlData.reduce((incidentsByAgent, incident) => {
+const mapIncidentsByAgent = data =>
+  data.reduce((acc, incident) => {
     const agent = incident["Taken By"];
-    incidentsByAgent[agent] = incidentsByAgent[agent] ? incidentsByAgent[agent] : [];
-    incidentsByAgent[agent].push(incident);
-    return incidentsByAgent;
+    acc[agent] = acc[agent] || [];
+    acc[agent].push(incident);
+    return acc;
   }, {});
-}
 
 const mapSFMembersToIncidentAgents = (sfMembers, incidentsByAgent) => {
   const sfAgentMapping = {};
@@ -93,13 +90,10 @@ const filterIncidentsByCriterion = (incidents, field, value, agent, alreadySelec
   return filtered.length ? filtered : incidents.filter(incident => incident['Taken By'] === agent);
 }
 
-const getRandomValue = (incidents, field) => {
-  const values = [...new Set(incidents.map(incident => incident[field]))];
-  return values[Math.floor(Math.random() * values.length)];
-}
+const getRandomValue = (incidents, field) => [...new Set(incidents.map(i => i[field]))][Math.floor(Math.random() * incidents.length)];
 
 const fisherYatesShuffle = array => {
-  array.forEach((i) => { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; });
+  array.forEach((i) => { const j = Math.floor(Math.random() * (i + 1));[array[i], array[j]] = [array[j], array[i]]; });
   return array;
 };
 
@@ -118,8 +112,8 @@ const createAndWriteWorksheet = (workbook, rows) => {
 
 const formatRowsForDownload = selectedIncidents => {
   let [previousSFMember, previousAgent] = [""];
-  return Object.keys(selectedIncidents).flatMap(sfMember => 
-    Object.keys(selectedIncidents[sfMember]).flatMap(agent => 
+  return Object.keys(selectedIncidents).flatMap(sfMember =>
+    Object.keys(selectedIncidents[sfMember]).flatMap(agent =>
       selectedIncidents[sfMember][agent].map(incident => {
         const row = {
           "SF Member": previousSFMember === sfMember ? "" : sfMember,
@@ -137,7 +131,7 @@ const formatRowsForDownload = selectedIncidents => {
 };
 
 const downloadFile = (res, newFilePath) => {
-  res.download(newFilePath, "AskIT - QCH_processed.xlsx", (err) => {
+  res.download(newFilePath, filename, (err) => {
     if (err) throw new Error("Error sending the file: " + err);
   });
 };
