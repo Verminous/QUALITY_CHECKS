@@ -1,19 +1,19 @@
-const express = require("express");
-const multer = require("multer");
-const xlsx = require("xlsx");
-const bodyParser = require("body-parser");
-const path = require("path");
-require("dotenv").config({ path: path.join(__dirname, ".env") });
+const express = require("express"),
+      multer = require("multer"),
+      xlsx = require("xlsx"),
+      bodyParser = require("body-parser"),
+      path = require("path"),
+      app = express(),
+      upload = multer({ dest: "uploads/" });
 
-const app = express();
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 const { UI_PORT: uiPort, SERV_PORT: port, HOSTNAME: hostname, SERV_FILENAME: filename } = process.env;
-const upload = multer({ dest: "uploads/" });
 
 app.use(bodyParser.json());
 
 app.use((req, res, next) => {
-  const { origin } = req.headers;
-  const allowedOrigins = [`http://localhost:${uiPort}`, `http://${req.hostname}:${uiPort}`];
+  const { origin } = req.headers,
+   allowedOrigins = [`http://localhost:${uiPort}`, `http://${req.hostname}:${uiPort}`];
   origin && allowedOrigins.includes(origin) && res.setHeader('Access-Control-Allow-Origin', origin);
   ['Access-Control-Allow-Methods', 'Access-Control-Allow-Headers', 'Access-Control-Allow-Credentials'].forEach(header => 
     res.header(header, header === 'Access-Control-Allow-Credentials' ? true : header === 'Access-Control-Allow-Methods' ? 'GET, POST, PUT, DELETE' : 'Content-Type, Authorization'));
@@ -58,9 +58,9 @@ const selectIncidentsByConfiguration = async (originalXlData, incidentConfigs, m
       selectedIncidents[sfMember][agent] = [];
       alreadySelected[agent] = new Set();
       Array(maxIncidents).fill().map((_, i) => {
-        const incidentConfig = incidentConfigs[i % incidentConfigs.length];
-        const potentialIncidents = ['Service', 'Contact type', 'First time fix'].reduce( (incidents, field) => filterIncidentsByCriterion(incidents, field, incidentConfig[field.toLowerCase()], agent, alreadySelected[agent]), [...originalXlData] );
-        const selectedIncident = selectUniqueIncidentForAgent(potentialIncidents, alreadySelected[agent]);
+        const incidentConfig = incidentConfigs[i % incidentConfigs.length],
+         potentialIncidents = ['Service', 'Contact type', 'First time fix'].reduce( (incidents, field) => filterIncidentsByCriterion(incidents, field, incidentConfig[field.toLowerCase()], agent, alreadySelected[agent]), [...originalXlData] ),
+         selectedIncident = selectUniqueIncidentForAgent(potentialIncidents, alreadySelected[agent]);
         selectedIncident && (selectedIncidents[sfMember][agent].push(selectedIncident), alreadySelected[agent].add(selectedIncident));
       });
     });
