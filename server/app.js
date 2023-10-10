@@ -80,11 +80,9 @@ const mapIncidentsByAgent = (originalXlData) => {
 
 const mapSFMembersToIncidentAgents = (sfMembers, incidentsByAgent) => {
   const sfAgentMapping = {};
-  const shuffledAgents = Object.keys(incidentsByAgent).sort(() => 0.5 - Math.random());
-  shuffledAgents.forEach((agent, index) => {
+  Object.keys(incidentsByAgent).sort(() => 0.5 - Math.random()).forEach((agent, index) => {
     const sfMember = sfMembers[index % sfMembers.length];
-    sfAgentMapping[sfMember] = sfAgentMapping[sfMember] ? sfAgentMapping[sfMember] : [];
-    sfAgentMapping[sfMember].push(agent);
+    sfAgentMapping[sfMember] = [...(sfAgentMapping[sfMember] || []), agent];
   });
   return sfAgentMapping;
 }
