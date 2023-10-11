@@ -1,0 +1,104 @@
+SUMMARY:
+
+1. The purpose is to map incidents to agents based on three categories: "Service", "Contact type", and "First time fix".
+2. The mapping process is sequential, and if the user doesn't specify a criterion, the value should be randomly assigned.
+3. If, at any step, an incident doesn't meet the criteria, a random incident should be picked.
+4. Once the incidents are filtered by the three classifications, a unique incident is picked and assigned to an agent, ensuring the incident hasn't been assigned to that agent before.
+5. This entire sequence (filtering based on Service, Contact Type, First Time Fix, and selecting an incident) can be repeated multiple times for each agent.
+6. The process is modular: there's repetitive logic, so the filtering process for the three categories should be a separate function. There should also be another function for the final incident selection.
+
+DIVING IN:
+
+1. Service Selection (X):
+
+1.1 - If the user specifies a service type from the UI, use that as "Service" X.
+1.2 - If the user selects "RANDOM", randomly assign a value for "Service" X.
+1.3 - Filter incidents from the total incident pool for the agent by "Service" X.
+1.4 - The code for this step must make absolutely sure that 1 incident is chosen. If no incidents match the criteria, randomly select any incident from the agent's total incident pool. This finalizes the "XYZM" sequence, since an incident was chosen, and we can move to the next line/row/incident beggining with again with step 1: "1. Service Selection (X)". Otherwise we move to step 1.5.
+1.5 - In case this 1st step (X) is repeated again for the same Service, when user for example wants the same Service X to appear 2 or more times, the code needs to be sure that locally, that is per agent, incidents are not repeated.  Incidents are only allowed to be repeated globally, that is for different agents.
+1.6 - This filtered list will be passed to the next step.
+
+2. Contact Type Selection (Y):
+
+2.1 - From the incidents filtered in the previous step:
+2.2 - If the user specifies a contact type from the UI, use that as "Contact type" Y.
+2.3 - If the user selects "RANDOM", randomly assign a value for "Contact type" Y.
+2.4 - Filter the list from the 1st step for incidents with "Contact type" Y.
+2.5 - The code for this step must make absolutely sure that 1 incident is chosen. If no incidents match the criteria, randomly select any incident from the list produced in step 1. This finalizes the "XYZM" sequence, since an incident was chosen, and we can move to the next line/row/incident beggining with again with step 1: "1. Service Selection (X)". Otherwise we move to step 2.6.
+2.6 - In case this 1st step (X) is repeated again for the same Service, when user for example wants the same Service X to appear 2 or more times, the code needs to be sure that locally, that is per agent, incidents are not repeated.  Incidents are only allowed to be repeated globally, that is for different agents.
+2.7 - This filtered list moves to the next step.
+
+3. First Time Fix Selection (Z):
+
+3.1 - From the incidents filtered in the previous step:
+3.2 - If the user specifies a value from the UI, use that as "First time fix" Z.
+3.3 - If the user selects "RANDOM", randomly assign a value for "First time fix" Z.
+3.4 - Filter the list from the 2nd step for incidents with "First time fix" Z.
+3.5 - The code for this step must make absolutely sure that 1 incident is chosen. If no incidents match the criteria, randomly select any incident from the list produced in step 2. This finalizes the "XYZM" sequence, since an incident was chosen, and we can move to the next line/row/incident beggining with again with step 1: "1. Service Selection (X)". Otherwise we move to step 3.6.
+3.6 - In case this 1st step (X) is repeated again for the same Service, when user for example wants the same Service X to appear 2 or more times, the code needs to be sure that locally, that is per agent, incidents are not repeated.  Incidents are only allowed to be repeated globally, that is for different agents.
+3.7 - This filtered list moves to the final step.
+
+4. Incident Selection and Uniqueness Check (M):
+4.1 - From the final filtered list:
+4.2 - Randomly select an incident to map to the agent.
+4.3 - Ensure the selected incident hasn't been previously assigned to the same agent in prior iterations of the configuration.
+4.4 - The code needs to make absolutely sure that in the end of XYZM cycle, the total quota for incidents per agent is met. This was already mentioned in steps 1.4, 2.5, and 3.5, but I am reeinforcing that we need a failproof way to achieve this. The only allowed exception is in the case the total pool of incidents for the agent is less than the desired user quota. In our example below we use an example of a total of 5 incidents per agent. But let's imagine that an agent was sick for the whole period for which the raw Excel file refers, and only progressed a total of 3 incidents for the whole month, and thus only 3 incidents appear in the raw Excel file in the 1st sheet. That is the only case allowed for an agent not to have the total amount of incidents assined in the processed 2nd sheet of the downloaded post-processed Excel file.
+
+Repetition Logic:
+
+- The entire sequence (X, Y, Z, M) is one complete filtering and mapping cycle for each one incident/line/row.
+- Based on user input, this sequence might be repeated multiple times for each agent. For instance, if the user wants 5 incidents mapped per agent, the XYZM sequence runs 5 times.
+- The sequence may run multiple times for each agent based on user input. For example, if a user requires 5 incidents per agent and there are 50 agents, the sequence runs 250 times in total.
+
+Example of a configuration sent by the UI:
+
+Request body: {
+incidentsPerAgent: 10,
+incidentConfigs: [
+{
+service: 'EMEIA Workplace',
+contactType: 'Self-service',
+ftf: 'FALSE'
+},
+{
+service: 'EMEIA Workplace',
+contactType: 'Self-service',
+ftf: 'FALSE'
+},
+{
+service: 'Secure Internet Gateway (Global SIG)',
+contactType: 'Chat',
+ftf: 'RANDOM'
+},
+{
+service: 'Secure Internet Gateway (Global SIG)',
+contactType: 'Chat',
+ftf: 'RANDOM'
+},
+{
+service: 'Identity and Access Management',
+contactType: 'Phone',
+ftf: 'TRUE'
+},
+{
+service: 'Identity and Access Management',
+contactType: 'Phone',
+ftf: 'TRUE'
+},
+{ service: 'RANDOM', contactType: 'RANDOM', ftf: 'RANDOM' },
+{ service: 'RANDOM', contactType: 'RANDOM', ftf: 'RANDOM' },
+{ service: 'RANDOM', contactType: 'RANDOM', ftf: 'RANDOM' },
+{ service: 'RANDOM', contactType: 'RANDOM', ftf: 'RANDOM' }
+],
+/* SFmembers and agents names omitted */ 
+}
+
+Implementation Requirements:
+
+- Modularity: Given the repetition in the logic, encapsulate the filtering process for X, Y, and Z in a standalone function. This function should handle the filtering logic. A separate function or code block will handle the unique requirements of the M step.
+- Efficiency: The logic is iterative, so it's crucial to keep performance in mind, especially when dealing with large sets of incidents and agents.
+- Functionality: The implementation should be able to handle various configurations sent by the UI dynamically and adapt accordingly.
+- Strictly follow this rule: DRY (Don't Repeat Yourself). It is forbidden to violate this rule.
+
+Conclusion:
+Analise step by step, analitically, in an excruciatingly detailed manner, with a methodologically forensic precision of a world class Software Engineer, each and every single requirement, points and subpoints outlined, and analise, inspect, evaluate, and write the code, that meets 100% the requirements outlined in this document.
