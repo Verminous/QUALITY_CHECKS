@@ -8,6 +8,7 @@ bun.lockb
 .vscode
 .DS_Store
 QCH.xlsx
+test.js
 #Project_requirements.txt
 
 # Client
