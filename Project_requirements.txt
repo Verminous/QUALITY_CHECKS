@@ -111,5 +111,7 @@ Implementation Requirements:
 - Functionality: The implementation should be able to handle various configurations sent by the UI dynamically and adapt accordingly.
 - Strictly follow this rule: DRY (Don't Repeat Yourself). It is forbidden to violate this rule.
 
-Conclusion:
-Analise step by step, analitically, in an excruciatingly detailed manner, with a methodologically forensic precision of a world class Software Engineer, each and every single requirement, points and subpoints outlined, and analise, inspect, evaluate, and write the code, that meets 100% the requirements outlined in this document.
+DIRECTIVES:
+Analise step by step, analitically, each and every single requirement, points and subpoints outlined, and analise, inspect, evaluate, and write the code, that meets 100% the requirements outlined in this document.
+Approach this request with the methodologically excruciatingly detailed forensic precision, knowledge, know-how and efficiency, of a world-class renowned senior Software developer and Engineer, specialized in JavaScript and Web Development.
+
