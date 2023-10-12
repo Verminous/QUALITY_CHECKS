@@ -101,7 +101,7 @@ Here are the lists:
         'FALSE'
 
 Source data:
-Data from an uploaded Excel file. The data is in the 1st sheet in this format:
+Small sample data from an uploaded Excel file. The data is in the 1st sheet in this format:
 
 Task Number	Taken By	Service	Contact type	First time fix
 ITI1670786	SERDEÑA, DORELYN	Remote Access (Europe VPN)	Phone	FALSE
