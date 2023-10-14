@@ -9,7 +9,8 @@ bun.lockb
 .DS_Store
 QCH.xlsx
 test.js
-#Project_requirements.txt
+_REQUIREMENTS
+Project_requirements.txt
 
 # Client
 client/.env
@@ -27,3 +28,4 @@ server/uploads/AskIT_QCH_processed.xlsx
 server/yarn.lock
 server/yarn-error.log
 server/.DS_Store
+logs/
