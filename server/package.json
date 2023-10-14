@@ -11,7 +11,9 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
-    "start": "nodemon app.js"
+    "start": "nodemon app.js",
+    "start2": "nodemon app2.js",
+    "start3": "nodemon app3.js"
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11"

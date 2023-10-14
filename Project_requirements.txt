@@ -1,4 +1,4 @@
-Consolidated Project Requirements
+ Project Requirements
 
 Summary:
 
@@ -101,15 +101,9 @@ ftf: 'TRUE'
 /* SFmembers and agents names omitted */ 
 }
 
-Implementation Requirements:
+Source Data:
 
-- Modularity: Given the repetition in the logic, encapsulate the filtering process for X, Y, and Z in a standalone function. This function should handle the filtering logic. A separate function or code block will handle the unique requirements of the M step.
-- Efficiency: The logic is iterative, so it's crucial to keep performance in mind, especially when dealing with large sets of incidents and agents.
-- Functionality: The implementation should be able to handle various configurations sent by the UI dynamically and adapt accordingly.
-- Strictly follow this rule: DRY (Don't Repeat Yourself). It is forbidden to violate this rule.
-Source Data
-
-Small sample data from an uploaded Excel file. The data is in the 1st sheet in this format:
+Small sample data from an uploaded Excel file. There are around 11500 rows in that Excel file. The data is in the 1st sheet in this format:
 
 Task Number	Taken By	Service	Contact type	First time fix
 ITI1670786	SERDEÑA, DORELYN	Remote Access (Europe VPN)	Phone	FALSE
@@ -130,7 +124,13 @@ ITI1704977	Palmaria, Erika	Ask IT	Self-service	FALSE
 ITI1705707	Kopczyński, Konrad	Identity and Access Management	Phone	TRUE
 ...
 
-This is just a sample. There are around 11500 rows in that Excel file.
+Implementation Requirements:
+
+- Modularity: Given the repetition in the logic, encapsulate the filtering process for X, Y, and Z in a standalone function. This function should handle the filtering logic. A separate function or code block will handle the unique requirements of the M step.
+- Efficiency: The logic is iterative, so it's crucial to keep performance in mind, especially when dealing with large sets of incidents and agents.
+- Functionality: The implementation should be able to handle various configurations sent by the UI dynamically and adapt accordingly.
+- Strictly follow this rule: DRY (Don't Repeat Yourself). It is forbidden to violate this rule.
+
 
 DIRECTIVES:
 

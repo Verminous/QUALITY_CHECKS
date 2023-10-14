@@ -6,7 +6,9 @@
   },
   "license": "MIT",
   "scripts": {
-    "dev": "concurrently \"yarn --cwd server start\" \"yarn --cwd client start\""
+    "dev": "concurrently \"yarn --cwd server start\" \"yarn --cwd client start\"",
+    "dev2": "concurrently \"yarn --cwd server start2\" \"yarn --cwd client start\"",
+    "dev3": "concurrently \"yarn --cwd server start3\" \"yarn --cwd client start\""
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
