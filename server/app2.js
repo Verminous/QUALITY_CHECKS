@@ -1,7 +1,8 @@
-const express = require("express"), fs = require('fs'), multer = require("multer"), xlsx = require("xlsx"), bodyParser = require("body-parser"), path = require("path"), app = express(), upload = multer({ dest: "uploads/" });
+const express = require("express"), cors = require('cors'),  fs = require('fs'), multer = require("multer"), xlsx = require("xlsx"), bodyParser = require("body-parser"), path = require("path"), app = express(), upload = multer({ dest: "uploads/" });
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 const { UI_PORT: uiPort, SERV_PORT: port, HOSTNAME: hostname, SERV_FILENAME: filename } = process.env;
 
+app.use(cors());
 app.use(bodyParser.json());
 app.use(({ headers: { origin } }, res, next) => { const allowed = [`http://localhost:${uiPort}`, `http://${hostname}:${uiPort}`]; allowed.includes(origin) && res.setHeader('Access-Control-Allow-Origin', origin);['Methods', 'Headers', 'Credentials'].forEach(h => res.header(`Access-Control-Allow-${h}`, h == 'Credentials' ? true : h == 'Methods' ? 'GET, POST, PUT, DELETE' : 'Content-Type, Authorization')); next(); });
 app.get("/", (req, res) => res.send("Server running!"));
@@ -55,45 +56,52 @@ const {
     return selectedIncident ? [selectedIncident] : [];
   },
 
-  selectIncidentsByConfiguration = (originalXlData, incidentConfigs, maxIncidents, sfAgentMapping) => {
-    (!Array.isArray(originalXlData) || !originalXlData.length) && (() => { throw new Error("Invalid originalXlData"); })();
-  
+   filterIncidentsByFields = (incidents, fieldCriteria, agent, alreadySelected) => {
+    return Object.entries(fieldCriteria).reduce((currentIncidents, [field, value]) => {
+        return filterByCriterion(currentIncidents, field, value, agent, alreadySelected);
+    }, incidents);
+},
+
+ selectIncidentsByConfiguration = (originalXlData, incidentConfigs, maxIncidents, sfAgentMapping) => {
+    (!Array.isArray(originalXlData) || !originalXlData.length) && (() => {
+        throw new Error("Invalid originalXlData");
+    })();
+
     const fieldToConfigKey = {
-      "Service": "service",
-      "Contact type": "contactType",
-      "First time fix": "ftf"
+        "Service": "service",
+        "Contact type": "contactType",
+        "First time fix": "ftf"
     };
-  
+
     return Object.entries(sfAgentMapping).reduce((selectedIncidents, [sfMember, agents]) => {
-      selectedIncidents[sfMember] = agents.reduce((agentIncidents, agent) => {
-        const alreadySelected = new Set();
-        agentIncidents[agent] = Array(maxIncidents).fill().reduce((incidents, _, i) => {
-          const incidentConfig = incidentConfigs[i % incidentConfigs.length];
-          let potentialIncidents = [...originalXlData];
-  
-          ["Service", "Contact type", "First time fix"].forEach(field => {
-            const configKey = fieldToConfigKey[field];
-            const filtered = incidentConfig[configKey] ? filterIncidentsByCriterion(potentialIncidents, field, incidentConfig[configKey], agent, alreadySelected, originalXlData) : [];
-            potentialIncidents = filtered.length ? filtered : potentialIncidents;
-            logToFile(`selectIncidentsByConfiguration_1 - Updated potential incidents to ${potentialIncidents.length} incidents after filtering by ${field} for agent ${agent}`);
-            if (!filtered.length && incidents.length <= i) {
-              const randomIncident = selectUniqueIncidentForAgent(potentialIncidents, alreadySelected);
-              incidents.push(randomIncident);
-              alreadySelected.add(randomIncident.incidentId);
-            }
-          });
-  
-          incidents.length <= i && potentialIncidents.length ? ((uniqueIncident = selectUniqueIncidentForAgent(potentialIncidents, alreadySelected)), incidents.push(uniqueIncident), alreadySelected.add(uniqueIncident.incidentId)) : logToFile(`Warning: No incidents available for fallback for agent ${agent}.`);
-          logToFile(`selectIncidentsByConfiguration_2 - Selected ${incidents.length} incidents for agent ${agent}`);
-          return incidents;
-        }, []);
-  
-        return agentIncidents;
-      }, {});
-  
-      return selectedIncidents;
+        selectedIncidents[sfMember] = agents.reduce((agentIncidents, agent) => {
+            const alreadySelected = new Set();
+            agentIncidents[agent] = Array(maxIncidents).fill().reduce((incidents, _, i) => {
+                const incidentConfig = incidentConfigs[i % incidentConfigs.length];
+                let fieldCriteria = {};
+                ["Service", "Contact type", "First time fix"].forEach(field => {
+                    const configKey = fieldToConfigKey[field];
+                    if (incidentConfig[configKey]) {
+                        fieldCriteria[field] = incidentConfig[configKey];
+                    }
+                });
+
+                const potentialIncidents = filterIncidentsByFields(originalXlData, fieldCriteria, agent, alreadySelected);
+                if (potentialIncidents.length) {
+                    const uniqueIncident = selectUniqueIncidentForAgent(potentialIncidents, alreadySelected);
+                    incidents.push(uniqueIncident);
+                    alreadySelected.add(uniqueIncident.incidentId);
+                } else {
+                    logToFile(`Warning: No incidents available for fallback for agent ${agent}.`);
+                }
+                logToFile(`selectIncidentsByConfiguration_2 - Selected ${incidents.length} incidents for agent ${agent}`);
+                return incidents;
+            }, []);
+            return agentIncidents;
+        }, {});
+        return selectedIncidents;
     }, {});
-  }
+},
 } = {};
 
 /* WRITE + DOWNLOAD */
