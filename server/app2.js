@@ -24,32 +24,22 @@ const {
 
   filterByCriterion = (incidents, field, value, agent, alreadySelected, triedValues = new Set()) => {
     value = value === "RANDOM" ? getRandomValue(incidents, field, alreadySelected) : value;
-    if (value === "RANDOM") {
-      logToFile(`filterByCriterion_1 - Random value selected for Contact type: ${value}`);
-    }
     triedValues.add(value);
-    logToFile(`filterByCriterion_2 - Initial number of incidents: ${incidents.length}`);
-    logToFile(`filterByCriterion_3 - Filtering by ${field} = ${value} for agent ${agent}`);
     const filtered = incidents.filter(incident => {
       const matches = !alreadySelected.has(incident) && incident[field] === value && incident["Taken By"] === agent;
-      if (!matches && incident[field] === value && incident["Taken By"] === agent) {
-        logToFile(`filterByCriterion_4 - Excluded incident: ${incident}, field: ${field}, value: ${value}, agent: ${agent}`);
-      }
       return matches;
     });
-    logToFile(`filterByCriterion_5 - Filtering by ${field} = ${value} for agent ${agent} resulted in ${filtered.length} incidents`);
-
+  
     if (!filtered.length) {
-      const uniqueValues = [...new Set(incidents.map((i) => i[field]))];
-      const untriedValues = uniqueValues.filter((value) => !triedValues.has(value));
+      const allValues = incidents.map((i) => i[field]);
+      const untriedValues = allValues.filter((value) => !triedValues.has(value));
       if (untriedValues.length === 0) {
         return [];
       }
       value = getRandomValue(incidents, field, alreadySelected);
       return filterByCriterion(incidents, field, value, agent, alreadySelected, triedValues);
     }
-    logToFile(`filterByCriterion_6 - Returning ${filtered.length} incidents after filtering by ${field} = ${value} for agent ${agent}`);
-
+  
     return filtered;
   },
 
@@ -65,7 +55,7 @@ const {
     return selectedIncident ? [selectedIncident] : [];
   },
 
-  selectIncidentsByConfiguration = async (originalXlData, incidentConfigs, maxIncidents, sfAgentMapping) => {
+  selectIncidentsByConfiguration = (originalXlData, incidentConfigs, maxIncidents, sfAgentMapping) => {
     (!Array.isArray(originalXlData) || !originalXlData.length) && (() => { throw new Error("Invalid originalXlData"); })();
   
     const fieldToConfigKey = {
