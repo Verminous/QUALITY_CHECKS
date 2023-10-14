@@ -31,3 +31,5 @@ logs/
 
 # _REQUIREMENTS
 _REQUIREMENTS/data.xlsx
+/_REQUIREMENTS/data.xlsx
+./_REQUIREMENTS/data.xlsx
