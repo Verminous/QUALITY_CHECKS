@@ -8,9 +8,13 @@ app.use(({ headers: { origin } }, res, next) => { const allowed = [`http://local
 app.get("/", (req, res) => res.send("Server running!"));
 app.listen(port, hostname, () => { console.log(`Server running at http://${hostname}:${port}/`); });
 
+/* ENDPOINTS */
+
 let lastUploadedFilePath;
 app.post("/upload", upload.single("file"), ({ file: { path: p } }, res) => { lastUploadedFilePath = p; const workbook = xlsx.readFile(p), sheet = workbook.Sheets[workbook.SheetNames[0]], json = xlsx.utils.sheet_to_json(sheet); res.json({ agentNames: [...new Set(json.map(data => data["Taken By"]))] }); });
 app.post("/process", upload.single("file"), async ({ body: config }, res) => { console.log(config); try { const workbook = xlsx.readFile(lastUploadedFilePath), sheet = workbook.Sheets[workbook.SheetNames[0]], originalXlData = xlsx.utils.sheet_to_json(sheet), { incidentConfigs, sfMembers, incidentsPerAgent } = config, selectedIncidents = await selectIncidentsByConfiguration(originalXlData, incidentConfigs, incidentsPerAgent, mapSFMembersToIncidentAgents(sfMembers, mapIncidentsByAgent(originalXlData))), rows = formatRowsForDownload(selectedIncidents); if (rows.length < incidentsPerAgent) { throw new Error("Not enough incidents matched the provided configuration"); } else { downloadFile(res, createAndWriteWorksheet(workbook, rows)); }; console.log(config); } catch (error) { console.error("Error in /process:", error, "Request body:", config, lastUploadedFilePath && "Last uploaded file path:", lastUploadedFilePath); res.status(500).send("Internal Server Error"); } });
+
+/* PROCESS DATA */
 
 const {
 
@@ -26,4 +30,10 @@ const {
 } = {};
 
 /* WRITE + DOWNLOAD */
-const { createAndWriteWorksheet = (workbook, rows) => { const newWorksheet = xlsx.utils.json_to_sheet(rows); workbook.Sheets["Processed List"] ? (workbook.Sheets["Processed List"] = newWorksheet) : xlsx.utils.book_append_sheet(workbook, newWorksheet, "Processed List"); const newFilePath = path.join(__dirname, "uploads", process.env.SERV_FILENAME); xlsx.writeFile(workbook, newFilePath); return newFilePath; }, formatRowsForDownload = (selectedIncidents) => { let [previousSFMember, previousAgent] = [""]; return Object.keys(selectedIncidents).flatMap((sfMember) => Object.keys(selectedIncidents[sfMember]).flatMap((agent) => selectedIncidents[sfMember][agent].map((incident) => { const row = { "SF Member": previousSFMember === sfMember ? "" : sfMember, Agent: previousAgent === agent ? "" : agent, "Task Number": incident["Task Number"], Service: incident["Service"], "Contact type": incident["Contact type"], "First time fix": incident["First time fix"], };[previousSFMember, previousAgent] = [sfMember, agent]; return row; }))); }, downloadFile = (res, newFilePath) => { res.download(newFilePath, filename, (err) => { if (err) throw new Error("Error sending the file: " + err); fs.unlink(newFilePath, (err) => { if (err) throw new Error("Error deleting the processed file: " + err); console.log("Processed file deleted successfully"); }); fs.unlink(lastUploadedFilePath, (err) => { if (err) throw new Error("Error deleting the temporary file: " + err); console.log("Temporary file deleted successfully"); }); }); } } = {};
+
+const {
+
+  createAndWriteWorksheet = (workbook, rows) => { const { json_to_sheet, book_append_sheet } = xlsx.utils; const { join } = path; const { SERV_FILENAME } = process.env; const newWorksheet = json_to_sheet(rows); const sheetName = "Processed List"; if (!workbook.Sheets[sheetName]) { book_append_sheet(workbook, newWorksheet, sheetName); } else { workbook.Sheets[sheetName] = newWorksheet; } const newFilePath = join(__dirname, "uploads", SERV_FILENAME); xlsx.writeFile(workbook, newFilePath); return newFilePath; },
+  formatRowsForDownload = selectedIncidents => { let [previousSFMember, previousAgent] = [""]; return Object.entries(selectedIncidents).flatMap(([sfMember, agents]) => Object.entries(agents).flatMap(([agent, incidents]) => incidents.map(incident => { const row = { "SF Member": previousSFMember === sfMember ? "" : sfMember, Agent: previousAgent === agent ? "" : agent, ...["Task Number", "Service", "Contact type", "First time fix"].reduce((acc, key) => ({ ...acc, [key]: incident[key] }), {}) }; [previousSFMember, previousAgent] = [sfMember, agent]; return row; }) ) ); },
+  downloadFile = (res, newFilePath) => { const errorHandler = (err, message) => { if (err) throw new Error(`${message} ${err}`); }; const unlinkFile = (path, message) => fs.unlink(path, err => errorHandler(err, message)); res.download(newFilePath, filename, err => { errorHandler(err, "Error sending the file:"); unlinkFile(newFilePath, "Error deleting the processed file:"); unlinkFile(lastUploadedFilePath, "Error deleting the temporary file:"); }); }
+} = {};
