@@ -1,0 +1,139 @@
+ Project Requirements
+
+Summary:
+
+- The project involves mapping incidents to agents based on three categories: "Service", "Contact type", and "First time fix". The mapping process is sequential and if the user doesn't specify a criterion, the value should be randomly assigned. If, at any step, an incident doesn't meet the criteria, a random value should be picked for that classification. Once the incidents are filtered by the three classifications/steps, on the 4th and last step, a unique incident is picked and assigned to the agent, ensuring the incident hasn't been assigned to that agent before. This entire sequence can be repeated multiple times for each agent. until the total amount/quota of incidents, defined by the user via UI, is met. 
+- The final mapping needs to be executed in a way that the total amount of incidents, specified by user, are mapped per each agent, then each SFmember will receive an X amount of agents (with each agent already with his/her incidents mapped). This distribution of agents to SFmembers needs to be done in an even way. A team of 50 agents, and a team of 10 SF members, will result in 5 agents being assigned to each SF member. 
+- The configuration is sent by a React UI where the user can choose the configuration. The processed data should be mapped/written to the 2nd sheet of the Excel file: 1st column the name of the SF member, 2nd column the name of the agent, 3rd column the incident numbers, 4th column the "Service", 5th column the "Contact type", 6th column the "First time fix".
+
+Detailed Steps:
+
+1. Service Selection (X):
+1.1. From the total pool of incidents for the agent.
+1.2. If the user specified a service type from the UI, use that as "Service" X.
+1.3. If the user selected "RANDOM", randomly pick a "Service" from the available pool.
+1.4. Filter incidents for the agent by the chosen or random "Service" X and build an array from that, to pass on to step 2/Y.
+1.5. If no incidents match the chosen "Service":
+1.5.1. Remove the failed "Service" from the pool.
+1.5.2. Randomly select another "Service" from the remaining pool.
+1.5.3. Continue this process until incidents matching a "Service" are found or the pool is exhausted.
+1.5.4. If all services are exhausted and no incidents are found, log a warning indicating no more incidents are available for this agent and close the XYZM cycle for this agent.
+1.6. Pass the filtered list to the next step (Y).
+
+2. Contact Type Selection (Y):
+2.1. From the incidents filtered in step X.
+2.2. If the user specified a contact type from the UI, use that as "Contact type" Y.
+2.3. If the user selected "RANDOM", randomly pick a "Contact type" from the available pool.
+2.4. Filter incidents for the agent by the chosen or random "Contact type" Y and build an array from that, to pass on to step 3/Z.
+2.5. If no incidents match the chosen "Contact type":
+2.5.1. Remove the failed "Contact type" from the pool.
+2.5.2. Randomly select another "Contact type" from the remaining pool.
+2.5.3. Continue this process until incidents matching a "Contact type" are found or the pool is exhausted.
+2.5.4. If all "Contact types" are exhausted, revert to step X to select a new "Service".
+2.6. Pass the filtered list to the next step (Z).
+
+3. First Time Fix Selection (Z):
+3.1. From the incidents filtered in step Y.
+3.2. If the user specified a "First time fix" from the UI, use that as "First time fix" Z.
+3.3. If the user selected "RANDOM", randomly pick a "First time fix" from the available pool.
+3.4. Filter incidents for the agent by the chosen or random "First time fix" Z and build an array from that, to pass on to step 4/M.
+3.5. If no incidents match the chosen "First time fix":
+3.5.1. Remove the failed "First time fix" from the pool.
+3.5.2. Randomly select another "First time fix" from the remaining pool.
+3.5.3. Continue this process until incidents matching a "First time fix" are found or the pool is exhausted.
+3.5.4. If all "First time fixes" are exhausted, revert to step Y to select a new "Contact type".
+3.6. Pass the filtered list to the next step (M).
+
+4. Incident Selection and Uniqueness Check (M):
+4.1. From the incidents filtered in step Z.
+4.2. If multiple incidents are available, randomly select one for mapping and conclude XYZM cycle.
+4.3. Ensure the selected incident hasn't been previously assigned to the same agent in prior XYZM cycles.
+4.4. Ensure that the total quota for incidents per agent is met, unless the agent's total incident pool is less than the desired quota.
+
+Repetition Logic:
+
+- The entire sequence (X, Y, Z, M) is one complete filtering and mapping cycle for each one incident/line/row. 
+- Based on user input, this sequence might be repeated multiple times for each agent. For instance, if the user wants 5 incidents mapped per agent, the XYZM sequence runs 5 times.
+- The sequence may run multiple times for each agent based on user input. For example, if a user requires 5 incidents per agent and there are 50 agents, the sequence runs 250 times in total.
+
+Implementation Requirements:
+
+Example of a configuration sent by the UI:
+
+Request body: {
+incidentsPerAgent: 10,
+incidentConfigs: [
+{
+service: 'EMEIA Workplace',
+contactType: 'Self-service',
+ftf: 'FALSE'
+},
+{
+service: 'EMEIA Workplace',
+contactType: 'Self-service',
+ftf: 'FALSE'
+},
+{
+service: 'Secure Internet Gateway (Global SIG)',
+contactType: 'Chat',
+ftf: 'RANDOM'
+},
+{
+service: 'Secure Internet Gateway (Global SIG)',
+contactType: 'Chat',
+ftf: 'RANDOM'
+},
+{
+service: 'Identity and Access Management',
+contactType: 'Phone',
+ftf: 'TRUE'
+},
+{
+service: 'Identity and Access Management',
+contactType: 'Phone',
+ftf: 'TRUE'
+},
+{ service: 'RANDOM', contactType: 'Phone', ftf: 'TRUE' },
+{ service: 'RANDOM', contactType: 'Phone', ftf: 'RANDOM' },
+{ service: 'RANDOM', contactType: 'Self-service', ftf: 'FALSE' },
+{ service: 'RANDOM', contactType: 'RANDOM', ftf: 'RANDOM' }
+],
+/* SFmembers and agents names omitted */ 
+}
+
+Source Data:
+
+Small sample data from an uploaded Excel file. There are around 11500 rows in that Excel file. The data is in the 1st sheet in this format:
+
+Task Number	Taken By	Service	Contact type	First time fix
+ITI1670786	SERDEÑA, DORELYN	Remote Access (Europe VPN)	Phone	FALSE
+ITI1705426	Janiak, Krzysztof	Identity and Access Management	Self-service	TRUE
+ITI1702280	Legaspi, Lyra	Local IT - Poland	Self-service	FALSE
+ITI1705481	DELOS REYES, JOHN CARLO	EMEIA Workplace	Phone	TRUE
+ITI1705694	Neves, Cristina	EMEIA Workplace	Phone	TRUE
+ITI1705681	Krawczyk, Anna	EMEIA Messaging	Self-service	FALSE
+ITI1704353	GACHE, Jeremiah	File	Self-service	TRUE
+ITI1703781	Grabarczyk, Igor	Mobile Phones UK	Self-service	TRUE
+ITI1705538	Marques Pisco, Paulo Alexandre	Identity and Access Management	Self-service	TRUE
+ITI1705503	Star, Aureliusz	M365 Apps	Self-service	TRUE
+ITI1703514	Arango Gomez, Yanquiel	Network Service (CE/WEMEIA)	Chat	FALSE
+ITI1680694	Nadjib'llah, Djamal	Secure Internet Gateway (Global SIG)	Self-service	FALSE
+ITI1705455	Gadomska, Amelia	M365 Apps	Self-service	TRUE
+ITI1694902	Pudlewski, Adrian	Secure Internet Gateway (Global SIG)	Self-service	FALSE
+ITI1704977	Palmaria, Erika	Ask IT	Self-service	FALSE
+ITI1705707	Kopczyński, Konrad	Identity and Access Management	Phone	TRUE
+...
+
+Implementation Requirements:
+
+- Modularity: Given the repetition in the logic, encapsulate the filtering process for X, Y, and Z in a standalone function. This function should handle the filtering logic. A separate function or code block will handle the unique requirements of the M step.
+- Efficiency: The logic is iterative, so it's crucial to keep performance in mind, especially when dealing with large sets of incidents and agents.
+- Functionality: The implementation should be able to handle various configurations sent by the UI dynamically and adapt accordingly.
+- Strictly follow this rule: DRY (Don't Repeat Yourself). It is forbidden to violate this rule.
+
+
+DIRECTIVES:
+
+Analise step by step, analitically, each and every single requirement, points and subpoints outlined, and analise, inspect, evaluate, and write the code, that meets 100% the requirements outlined in this document.
+Approach this request with the methodologically excruciatingly detailed forensic precision, knowledge, know-how and efficiency, of a world-class renowned senior Software developer and Engineer, specialized in JavaScript and Web Development.
+
