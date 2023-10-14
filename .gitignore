@@ -33,3 +33,6 @@ logs/
 _REQUIREMENTS/data.xlsx
 /_REQUIREMENTS/data.xlsx
 ./_REQUIREMENTS/data.xlsx
+_REQUIREMENTS/Raw_Excel_file_1st_sheet_sample.txt
+/_REQUIREMENTS/Raw_Excel_file_1st_sheet_sample.txt
+./_REQUIREMENTS/Raw_Excel_file_1st_sheet_sample.txt
