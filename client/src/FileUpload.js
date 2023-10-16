@@ -91,10 +91,10 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
     const handleConfigSubmit = async () => {
         const sfMembersArray = sfMembers.split('\n').map(name => name.trim()).filter(name => name.length > 0);
 
-        console.log('Submitting Config:', {
+        /* console.log('Submitting Config:', {
             ...config,
             sfMembers: sfMembersArray
-          });
+          }); */
 
         try {
             const response = await fetch(processUrl, {
