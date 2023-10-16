@@ -1,0 +1,144 @@
+<mxfile host="app.diagrams.net" modified="2023-10-16T17:27:49.992Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36" etag="oHKT8JS1yETBYFqWFEZR" version="22.0.4" type="github">
+  <diagram name="Page-1" id="601YtECSGnkjqSbJyeCg">
+    <mxGraphModel dx="1434" dy="870" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-83" style="edgeStyle=orthogonalEdgeStyle;shape=flexArrow;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="pkVKLSt2idgzNgUgIgFS-1" target="pkVKLSt2idgzNgUgIgFS-15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-1" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;0 - CYCLE START&lt;/b&gt;&lt;/font&gt;&lt;br&gt;TOTAL POOL OF INCIDENTS&lt;br&gt;FOR AGENT" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="150" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-53" style="edgeStyle=orthogonalEdgeStyle;shape=flexArrow;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;width=10;endSize=4.67;entryX=0.862;entryY=0.967;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="pkVKLSt2idgzNgUgIgFS-15" target="pkVKLSt2idgzNgUgIgFS-16">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="145" y="367" as="sourcePoint" />
+            <mxPoint x="720" y="660" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="94" y="427" />
+              <mxPoint x="94" y="860" />
+              <mxPoint x="721" y="860" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-15" value="1 - FILTER BY &lt;br&gt;&lt;b&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&quot;SERVICE&quot;&lt;/font&gt;&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="18" y="357" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-54" style="edgeStyle=orthogonalEdgeStyle;shape=flexArrow;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="pkVKLSt2idgzNgUgIgFS-16" target="pkVKLSt2idgzNgUgIgFS-45">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-79" style="edgeStyle=orthogonalEdgeStyle;shape=flexArrow;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="pkVKLSt2idgzNgUgIgFS-16" target="pkVKLSt2idgzNgUgIgFS-35">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-16" value="FOUND INCIDENTS MATCHING&lt;br&gt;SPECIFIED VALUE FOR CLASSIFICATION?" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="540" y="585" width="210" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-80" style="edgeStyle=orthogonalEdgeStyle;shape=flexArrow;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="pkVKLSt2idgzNgUgIgFS-35" target="pkVKLSt2idgzNgUgIgFS-15">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="60" y="740" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="890" y="950" />
+              <mxPoint x="53" y="950" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-35" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;&lt;b&gt;NO?&lt;/b&gt;&lt;/font&gt;&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;CHOOSE ANOTHER&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;RANDOM VALUE&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;FOR THAT&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;CLASSIFICATION,&lt;br&gt;AND REPEAT STEP." style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="560" width="180" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-58" style="edgeStyle=orthogonalEdgeStyle;shape=flexArrow;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="pkVKLSt2idgzNgUgIgFS-45" target="pkVKLSt2idgzNgUgIgFS-57">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="350" y="530" />
+              <mxPoint x="350" y="530" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-71" style="edgeStyle=orthogonalEdgeStyle;shape=flexArrow;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.359;exitY=-0.018;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="pkVKLSt2idgzNgUgIgFS-45" target="pkVKLSt2idgzNgUgIgFS-68">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="910" y="490" as="targetPoint" />
+            <mxPoint x="383.25" y="530" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="381" y="480" />
+              <mxPoint x="674" y="480" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-75" style="edgeStyle=orthogonalEdgeStyle;shape=flexArrow;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#FFE6CC;" edge="1" parent="1" source="pkVKLSt2idgzNgUgIgFS-45" target="pkVKLSt2idgzNgUgIgFS-76">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1010" y="430" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="405" y="520" />
+              <mxPoint x="1011" y="520" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-47" value="4 STEP MAPPING&amp;nbsp;&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;CYCLE FOR EACH INCIDENT&lt;br&gt;&lt;br&gt;&lt;b&gt;SERVICE &lt;/b&gt;&amp;gt; &lt;b&gt;CONTACT TYPE&lt;/b&gt; &amp;gt; &lt;b&gt;FIRST TIME FIX &lt;/b&gt;&amp;gt; &lt;b&gt;MAPPING&lt;/b&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="45" width="400" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-45" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;&lt;b&gt;YES?&lt;/b&gt;&lt;/font&gt;&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;GO TO NEXT STEP&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;TO FILTER FURTHER" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="560" width="170" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-66" style="edgeStyle=orthogonalEdgeStyle;shape=flexArrow;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="1" source="pkVKLSt2idgzNgUgIgFS-48">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="640" y="640" as="targetPoint" />
+            <mxPoint x="441" y="357" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="529" y="357" />
+              <mxPoint x="530" y="357" />
+              <mxPoint x="530" y="320" />
+              <mxPoint x="290" y="320" />
+              <mxPoint x="290" y="770" />
+              <mxPoint x="640" y="770" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-48" value="2 - FILTER BY &lt;br&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;&quot;CONTACT TYPE&quot;&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="454" y="350" width="150" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-67" style="edgeStyle=orthogonalEdgeStyle;shape=flexArrow;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.686;entryY=0.983;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="1" source="pkVKLSt2idgzNgUgIgFS-49" target="pkVKLSt2idgzNgUgIgFS-16">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="680" y="650" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="880" y="280" />
+              <mxPoint x="250" y="280" />
+              <mxPoint x="250" y="810" />
+              <mxPoint x="684" y="810" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-49" value="3 - FILTER BY &lt;br&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;&quot;FIRST TIME FIX&quot;&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="357" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-81" style="edgeStyle=orthogonalEdgeStyle;shape=flexArrow;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="pkVKLSt2idgzNgUgIgFS-50">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1200" y="550" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-50" value="4 - MAP INCIDENT. &lt;br&gt;CYCLE CONCLUDED" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="353.5" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-59" style="edgeStyle=orthogonalEdgeStyle;shape=flexArrow;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="pkVKLSt2idgzNgUgIgFS-57" target="pkVKLSt2idgzNgUgIgFS-48">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-57" value="SEND&amp;nbsp;&lt;br&gt;RESULT&lt;br&gt;TO NEXT&#39;&lt;br&gt;STEP" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="310" y="348.5" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-74" style="edgeStyle=orthogonalEdgeStyle;shape=flexArrow;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="pkVKLSt2idgzNgUgIgFS-68" target="pkVKLSt2idgzNgUgIgFS-49">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-68" value="SEND&amp;nbsp;&lt;br&gt;RESULT&lt;br&gt;TO NEXT&#39;&lt;br&gt;STEP" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="633" y="352" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-78" style="edgeStyle=orthogonalEdgeStyle;shape=flexArrow;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="pkVKLSt2idgzNgUgIgFS-76" target="pkVKLSt2idgzNgUgIgFS-50">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-76" value="SEND&amp;nbsp;&lt;br&gt;RESULT&lt;br&gt;TO NEXT&#39;&lt;br&gt;STEP" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="980" y="347" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="pkVKLSt2idgzNgUgIgFS-82" value="QUOTA REACHED?&lt;br&gt;GO TO NEXT AGENT&lt;br&gt;OTHERWISE&lt;br&gt;RESTART CYCLE FOR&lt;br&gt;ANOTHER INCIDENT&lt;br&gt;AT&amp;nbsp;&lt;br&gt;&lt;font style=&quot;border-color: var(--border-color); font-size: 16px;&quot;&gt;&lt;b style=&quot;border-color: var(--border-color);&quot;&gt;0 - CYCLE START&lt;/b&gt;&lt;/font&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="550" width="180" height="180" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

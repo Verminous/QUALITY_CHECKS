@@ -24,39 +24,30 @@ const {
   mapSFMembersToIncidentAgents = (sfMembers, incidentsByAgent) => fisherYatesShuffle(Object.keys(incidentsByAgent)).reduce((sfAgentMapping, agent, index) => ({ ...sfAgentMapping, [sfMembers[index % sfMembers.length]]: [...(sfAgentMapping[sfMembers[index % sfMembers.length]] || []), agent] }), {}),
   selectUniqueIncidentForAgent = (filteredIncidents = [], alreadySelected, originalIncidents = []) => { const [getUniqueIncidents, getRandomIncident] = [incidents => incidents.filter(incident => !alreadySelected.has(incident["Task Number"])), incidents => incidents[~~(Math.random() * incidents.length)]]; const selectedIncident = getRandomIncident((filteredIncidents.length ? filteredIncidents : originalIncidents).filter(incident => !alreadySelected.has(incident["Task Number"]))); selectedIncident && (console.warn(selectedIncident ? "" : "All original incidents have been selected for the current agent."), alreadySelected.add(selectedIncident["Task Number"])); return selectedIncident; },
 
-  filterByCriterion = (incidents, field, value, agent, alreadySelected, triedValues = new Set()) => { const helper = (value, triedValues) => { triedValues.add(value); const filtered = incidents.filter(incident => !alreadySelected.has(incident) && String(incident[field]).toLowerCase() === value.toLowerCase() && incident["Taken By"] === agent); const untriedValues = incidents.map(i => i[field]).filter(v => !triedValues.has(v)); if (field === 'First time fix' && filtered.length === 0 && !triedValues.has(value === "TRUE" ? "FALSE" : "TRUE")) { return helper(value === "TRUE" ? "FALSE" : "TRUE", triedValues); } return filtered.length ? filtered : (untriedValues.length ? helper(getRandomValue(incidents, field, alreadySelected), triedValues) : []); }; return helper(value === "RANDOM" ? getRandomValue(incidents, field, alreadySelected) : value, triedValues); },
-  filterIncidentsByFields = (incidents, fieldCriteria, agent, alreadySelected) => Object.entries(fieldCriteria).reduce((currentIncidents, [field, value]) => filterByCriterion(currentIncidents, field, value, agent, alreadySelected), incidents),
-  selectIncidentsByConfiguration = (originalXlData, incidentConfigs, maxIncidents, sfAgentMapping) => {
-    if (!Array.isArray(originalXlData) || !originalXlData.length) throw new Error("Invalid originalXlData");
-    const fieldToConfigKey = { "Service": "service", "Contact type": "contactType", "First time fix": "ftf" };
-    return Object.entries(sfAgentMapping).reduce((selectedIncidents, [sfMember, agents]) => {
-      selectedIncidents[sfMember] = agents.reduce((agentIncidents, agent) => {
-        const alreadySelected = new Set();
-        agentIncidents[agent] = Array(maxIncidents).fill().reduce((incidents, _, i) => {
-          const { order = ['service', 'contactType', 'ftf'], ...incidentConfig } = incidentConfigs[i % incidentConfigs.length];
-          const fieldCriteria = order.reduce((criteria, key) => {
-            const field = Object.keys(fieldToConfigKey).find(field => fieldToConfigKey[field] === key);
-            return field ? { ...criteria, [field]: incidentConfig[key] } : criteria;
-          }, {});
-          const potentialIncidents = filterIncidentsByFields(originalXlData, fieldCriteria, agent, alreadySelected);
-          const uniqueIncident = potentialIncidents.length && selectUniqueIncidentForAgent(potentialIncidents, alreadySelected);
-          uniqueIncident && incidents.push(uniqueIncident);
-          return incidents;
-        }, []);
-        let attempts = 0;
-        while (agentIncidents[agent].length < maxIncidents && attempts < maxIncidents) {
-          const fieldCriteria = { "Service": incidentConfigs[0].service, "Contact type": getRandomValue(originalXlData, "Contact type", alreadySelected) };
-          const potentialIncidents = filterIncidentsByFields(originalXlData, fieldCriteria, agent, alreadySelected);
-          const uniqueIncident = potentialIncidents.length && selectUniqueIncidentForAgent(potentialIncidents, alreadySelected);
-          uniqueIncident ? agentIncidents[agent].push(uniqueIncident) : attempts++;
-        }
-        return agentIncidents;
-      }, {});
-      return selectedIncidents;
-    }, {});
-  }
-
+  filterByCriterion = (incidents, field, value, agent, alreadySelected, triedValues = new Set()) => {
+    const helper = (value, triedValues) => {
+      triedValues.add(value);
+      const filtered = incidents.filter((incident) => !alreadySelected.has(incident) && String(incident[field]).toLowerCase() === (typeof value === 'string' ? value.toLowerCase() : value) && incident["Taken By"] === agent);
+      const untriedValues = incidents.map((i) => i[field]).filter((v) => !triedValues.has(v));
+      if (field === 'First time fix' && filtered.length === 0 && !triedValues.has(value === "TRUE" ? "FALSE" : "TRUE")) {
+        return helper(value === "TRUE" ? "FALSE" : "TRUE", triedValues);
+      }
+      
+      if (filtered.length === 0 && untriedValues.length) {
+        return helper(getRandomValue(incidents, field, alreadySelected), triedValues);
+      }
+      return filtered;
+    };
+    return helper(value === "RANDOM" ? getRandomValue(incidents, field, alreadySelected) : value, triedValues);
+  },  
   
+  filterIncidentsByFields = (incidents, fieldCriteria, agent, alreadySelected) => Object.entries(fieldCriteria).reduce((currentIncidents, [field, value]) => filterByCriterion(currentIncidents, field, value, agent, alreadySelected), incidents),
+  selectIncidentsByConfiguration = (originalXlData, incidentConfigs, maxIncidents, sfAgentMapping) => { if (!Array.isArray(originalXlData) || !originalXlData.length) throw new Error("Invalid originalXlData"); const fieldToConfigKey = { "Service": "service", "Contact type": "contactType", "First time fix": "ftf" }; return Object.entries(sfAgentMapping).reduce((selectedIncidents, [sfMember, agents]) => { selectedIncidents[sfMember] = agents.reduce((agentIncidents, agent) => { const alreadySelected = new Set(); const usedServices = new Set(); agentIncidents[agent] = Array(maxIncidents).fill().reduce((incidents, _, i) => { const { order = ['service', 'contactType', 'ftf'], ...incidentConfig } = incidentConfigs[i % incidentConfigs.length]; const fieldCriteria = order.reduce((criteria, key) => { const field = Object.keys(fieldToConfigKey).find(field => fieldToConfigKey[field] === key); return field ? { ...criteria, [field]: incidentConfig[key] } : criteria; }, {}); let potentialIncidents = filterIncidentsByFields(originalXlData, fieldCriteria, agent, alreadySelected); if (potentialIncidents.length === 0 && fieldCriteria["Service"] && !usedServices.has(fieldCriteria["Service"])) { usedServices.add(fieldCriteria["Service"]); fieldCriteria["Service"] = getRandomValue(originalXlData, "Service", usedServices); potentialIncidents = filterIncidentsByFields(originalXlData, fieldCriteria, agent, alreadySelected); } const uniqueIncident = potentialIncidents.length && selectUniqueIncidentForAgent(potentialIncidents, alreadySelected); uniqueIncident && incidents.push(uniqueIncident); return incidents; }, []); let attempts = 0; 
+  
+  while (agentIncidents[agent].length < maxIncidents && attempts < maxIncidents) { const fieldCriteria = { "Service": getRandomValue(originalXlData, "Service", usedServices), "Contact type": getRandomValue(originalXlData, "Contact type", alreadySelected) }; 
+  
+  const potentialIncidents = filterIncidentsByFields(originalXlData, fieldCriteria, agent, alreadySelected); const uniqueIncident = potentialIncidents.length && selectUniqueIncidentForAgent(potentialIncidents, alreadySelected); if (uniqueIncident) { agentIncidents[agent].push(uniqueIncident); } else { attempts++; usedServices.add(fieldCriteria["Service"]); } } return agentIncidents; }, {}); return selectedIncidents; }, {}); }
+
 } = {};
 
 /* WRITE + DOWNLOAD */
