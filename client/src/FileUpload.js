@@ -124,7 +124,7 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
     };
 
     const [sfMembers, setSfMembers] = useState(
-        "Kempa, Martin\nSocha, Michał\nKrasowicz, Barbara\nSzczypior, Dawid\nSiemieniuk, Roman\nKalbarczyk, Jan\nLubonski, Piotr\nKucinska, Diana\nZiółkowski, Konrad\nKoplin, Krzysztof"
+        "Kempa, Martin\nSocha, Michał\nKrasowicz, Barbara\nSzczypior, Dawid\nSiemieniuk, Roman\nKalbarczyk, Jan\nLubonski, Piotr\nKucinska, Diana\nStepien, Ewa\nKoplin, Krzysztof"
     );
     const [agentAccounts, setAgentAccounts] = useState('');
 
