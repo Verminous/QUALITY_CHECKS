@@ -3,17 +3,15 @@ import React, { useState, useEffect, useMemo } from 'react';
 const serverPort = process.env.REACT_APP_SERVER_PORT;
 const currentHost = window.location.hostname;
 const uploadUrl = `http://${currentHost}:${serverPort}/upload`;
-const processUrl = `http://${currentHost}:${serverPort}/process`; // Adjust this if needed
-
+const processUrl = `http://${currentHost}:${serverPort}/process`;
 
 const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
     const fileInput = React.createRef();
- 
+
     const services = useMemo(() => [
         'EMEIA Workplace',
         'Secure Internet Gateway (Global SIG)',
         'Identity and Access Management',
-        'Identity Access Management (Finland)',
         'M365 Teams',
         'M365 Email',
         'M365 Apps',
@@ -27,6 +25,22 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
         'M365 Sharepoint',
         'RANDOM'
     ], []);
+
+    const defaultServices = [
+        'M365 Teams',
+        'M365 Email',
+        'Software Distribution (SCCM)',
+        'M365 Apps',
+        'Ask IT',
+        'EMEIA Messaging',
+        'Mobile Phones UK',
+        'ZinZai Connect',
+        'ForcePoint',
+        'Network Service (CE/WEMEIA)',
+        'M365 Sharepoint'
+    ];
+
+    const [randomServices, setRandomServices] = useState(services.reduce((acc, service) => ({ ...acc, [service]: defaultServices.includes(service) }), {}));
 
     const contactTypes = useMemo(() => [
         'Self-service',
@@ -74,7 +88,7 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
         if (file) {
             onFileSelect(file);
             const formData = new FormData();
-            formData.append('file', file); 
+            formData.append('file', file);
             try {
                 const response = await fetch(uploadUrl, {
                     method: 'POST',
@@ -91,18 +105,18 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
     const handleConfigSubmit = async () => {
         const sfMembersArray = sfMembers.split('\n').map(name => name.trim()).filter(name => name.length > 0);
 
-        /* console.log('Submitting Config:', {
-            ...config,
-            sfMembers: sfMembersArray
-          }); */
-
         try {
             const response = await fetch(processUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ ...config, sfMembers: sfMembersArray, agentNames: agentAccounts.split('\n') }),
+                body: JSON.stringify({
+                    ...config,
+                    sfMembers: sfMembersArray,
+                    agentNames: agentAccounts.split('\n'),
+                    randomServices: Object.keys(randomServices).filter(service => randomServices[service])
+                }),
             });
 
             if (response.ok) {
@@ -122,6 +136,8 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
             console.error('Error processing file:', error);
         }
     };
+
+
 
     const [sfMembers, setSfMembers] = useState(
         "Kempa, Martin\nSocha, Michał\nKrasowicz, Barbara\nSzczypior, Dawid\nSiemieniuk, Roman\nKalbarczyk, Jan\nLubonski, Piotr\nKucinska, Diana\nStepien, Ewa\nKoplin, Krzysztof"
@@ -166,6 +182,23 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
                 ))}
             </div>
             <br />
+
+            <div className='all-accounts'>
+                <div className='random-services'>
+                    <h2>Define RANDOM</h2>
+                    {services.filter(service => service !== 'RANDOM').map(service => (
+                        <label key={service}>
+                            <input
+                                type="checkbox"
+                                checked={randomServices[service]}
+                                onChange={() => setRandomServices({ ...randomServices, [service]: !randomServices[service] })}
+                            />
+                            {service}
+                        </label>
+                    ))}
+                </div>
+            </div>
+
             <div className='all-accounts'>
                 <div className='sf-accounts'>
                     <h2>SF team members</h2>

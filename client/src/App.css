@@ -42,3 +42,26 @@ body {
 .agent-accounts {
   width: 100%;
 }
+
+input[type="checkbox"] {
+  margin: 0 10px 0 0;
+}
+
+label {
+  display: inline-block;
+  margin: 5px 0;
+  max-width: 90%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.random-services {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+label {
+  margin: 2px 0;
+}
