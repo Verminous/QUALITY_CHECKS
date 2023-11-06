@@ -42,7 +42,15 @@ const {
     data.reduce((acc, incident) => {
       const agent = incident["Taken By"];
       acc[agent] = acc[agent] || [];
-      acc[agent].push(incident);
+      const existingIncidentIndex = acc[agent].findIndex(i => i["Task Number"] === incident["Task Number"]);
+      if (existingIncidentIndex !== -1) {
+        acc[agent][existingIncidentIndex] = {
+          ...acc[agent][existingIncidentIndex],
+          ...incident
+        };
+      } else {
+        acc[agent].push(incident);
+      }
       return acc;
     }, {}),
   mapSFMembersToIncidentAgents = (sfMembers, incidentsByAgent) => {
@@ -102,8 +110,6 @@ const {
       if (untriedServices.length > 0) {
         value =
           untriedServices[Math.floor(Math.random() * untriedServices.length)];
-        // Remove the selected service from the randomServices array
-        randomServices = randomServices.filter((service) => service !== value);
       } else {
         value = getRandomValue(incidents, field, alreadySelected);
       }
