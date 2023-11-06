@@ -21,6 +21,7 @@ app.post("/process", upload.single("file"), async ({ body: config }, res) => { c
 /* DATA PROCESSING */
 
 const {
+  triedServices = {},
   getRandomValue = (incidents, field, alreadySelected) => {
     const uniqueValues = [...new Set(incidents.map((i) => i[field]))];
     const unselectedValues = uniqueValues.filter(
@@ -101,6 +102,8 @@ const {
       if (untriedServices.length > 0) {
         value =
           untriedServices[Math.floor(Math.random() * untriedServices.length)];
+        // Remove the selected service from the randomServices array
+        randomServices = randomServices.filter((service) => service !== value);
       } else {
         value = getRandomValue(incidents, field, alreadySelected);
       }
@@ -109,6 +112,7 @@ const {
       value = getRandomValue(incidents, field, alreadySelected);
     }
     triedValues.add(value);
+    triedServices[agent] = triedValues;
     const filtered = incidents.filter((incident) => {
       const matches =
         !alreadySelected.has(incident) &&
@@ -169,7 +173,7 @@ const {
           value,
           agent,
           alreadySelected,
-          new Set(), 
+          triedServices[agent] || new Set(), 
           randomServices
         );
       },
@@ -183,6 +187,7 @@ const {
     sfAgentMapping,
     randomServices
   ) => {
+    
     (!Array.isArray(originalXlData) || !originalXlData.length) &&
       (() => {
         throw new Error("Invalid originalXlData");
