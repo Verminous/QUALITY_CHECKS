@@ -125,9 +125,12 @@ const {
       if (untriedValues.length === 0) {
         return [];
       }
+      const untriedServices = randomServices.filter(
+        (service) => !triedValues.has(service)
+      );
       value =
-        field === "Service" && randomServices.length > 0
-          ? randomServices[Math.floor(Math.random() * randomServices.length)]
+        field === "Service" && untriedServices.length > 0
+          ? untriedServices[Math.floor(Math.random() * untriedServices.length)]
           : getRandomValue(incidents, field, alreadySelected);
       if (!triedValues.has(value)) {
         return filterByCriterion(
