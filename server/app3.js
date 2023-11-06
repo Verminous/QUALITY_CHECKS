@@ -22,6 +22,7 @@ app.post("/process", upload.single("file"), async ({ body: config }, res) => { c
 
 const {
   triedServices = {},
+
   getRandomValue = (incidents, field, alreadySelected) => {
     const uniqueValues = [...new Set(incidents.map((i) => i[field]))];
     const unselectedValues = uniqueValues.filter(
@@ -74,18 +75,18 @@ const {
     selectedIncident = uniqueIncidents.length
       ? uniqueIncidents[Math.floor(Math.random() * uniqueIncidents.length)]
       : (() => {
-          let remainingOriginals = originalIncidents.filter(
-            (incident) => !alreadySelected.has(incident)
-          );
-          return remainingOriginals.length
-            ? remainingOriginals[
-                Math.floor(Math.random() * remainingOriginals.length)
-              ]
-            : (console.warn(
-                "All original incidents have been selected for the current agent."
-              ),
-              null);
-        })();
+        let remainingOriginals = originalIncidents.filter(
+          (incident) => !alreadySelected.has(incident)
+        );
+        return remainingOriginals.length
+          ? remainingOriginals[
+          Math.floor(Math.random() * remainingOriginals.length)
+          ]
+          : (console.warn(
+            "All original incidents have been selected for the current agent."
+          ),
+            null);
+      })();
     selectedIncident ? alreadySelected.add(selectedIncident) : null;
     return selectedIncident;
   },
@@ -112,10 +113,12 @@ const {
           untriedServices[Math.floor(Math.random() * untriedServices.length)];
       } else {
         value = getRandomValue(incidents, field, alreadySelected);
+        alreadySelected.add(value); // Update the alreadySelected set
       }
       logToFile(`filterByCriterion - New value for RANDOM service: ${value}`);
     } else if (value === "RANDOM") {
       value = getRandomValue(incidents, field, alreadySelected);
+      alreadySelected.add(value); // Update the alreadySelected set
     }
     triedValues.add(value);
     triedServices[agent] = triedValues;
@@ -179,7 +182,7 @@ const {
           value,
           agent,
           alreadySelected,
-          triedServices[agent] || new Set(), 
+          triedServices[agent] || new Set(),
           randomServices
         );
       },
@@ -193,7 +196,7 @@ const {
     sfAgentMapping,
     randomServices
   ) => {
-    
+
     (!Array.isArray(originalXlData) || !originalXlData.length) &&
       (() => {
         throw new Error("Invalid originalXlData");
@@ -247,4 +250,68 @@ const {
 } = {};
 
 /* WRITE + DOWNLOAD */
-const { createAndWriteWorksheet = (workbook, rows) => { const { json_to_sheet, book_append_sheet } = xlsx.utils; const { join } = path; const { SERV_FILENAME } = process.env; const newWorksheet = json_to_sheet(rows); const sheetName = "Processed List"; if (!workbook.Sheets[sheetName]) { book_append_sheet(workbook, newWorksheet, sheetName); } else { workbook.Sheets[sheetName] = newWorksheet; } const newFilePath = join(__dirname, "uploads", SERV_FILENAME); xlsx.writeFile(workbook, newFilePath); return newFilePath; }, formatRowsForDownload = selectedIncidents => { let [previousSFMember, previousAgent] = ["", ""]; let rows = []; Object.entries(selectedIncidents).forEach(([sfMember, agents], sfIndex) => { Object.entries(agents).forEach(([agent, incidents], agentIndex) => { incidents.forEach(incident => { const row = { "SF Member": previousSFMember === sfMember ? "" : sfMember, Agent: previousAgent === agent ? "" : agent, ...["Task Number", "Service", "Contact type", "First time fix"].reduce((acc, key) => ({ ...acc, [key]: incident[key] }), {}) };[previousSFMember, previousAgent] = [sfMember, agent]; rows.push(row); }); agentIndex < Object.keys(agents).length - 1 ? rows.push({}) : null; }); sfIndex < Object.keys(selectedIncidents).length - 1 ? rows.push({}, {}) : null; }); return rows; }, downloadFile = (res, newFilePath) => { const errorHandler = (err, message) => { if (err) throw new Error(`${message} ${err}`); }; const unlinkFile = (path, message) => fs.unlink(path, err => errorHandler(err, message)); res.download(newFilePath, filename, err => { errorHandler(err, "Error sending the file:"); unlinkFile(newFilePath, "Error deleting the processed file:"); unlinkFile(lastUploadedFilePath, "Error deleting the temporary file:"); }); } } = {};
+const {
+
+  createAndWriteWorksheet = (workbook, rows) => {
+    const { json_to_sheet, book_append_sheet } = xlsx.utils;
+    const { join } = path;
+    const { SERV_FILENAME } = process.env;
+    const newWorksheet = json_to_sheet(rows);
+    const sheetName = "Processed List";
+  
+    newWorksheet['!cols'] = [
+      { wch: 20 },
+      { wch: 25 },
+      { wch: 15 },
+      { wch: 30 },
+      { wch: 20 },
+      { wch: 10 },
+    ];
+  
+    if (!workbook.Sheets[sheetName]) {
+      book_append_sheet(workbook, newWorksheet, sheetName);
+    } else {
+      workbook.Sheets[sheetName] = newWorksheet;
+    }
+  
+    // Modify the column widths of the first sheet
+    const firstSheetName = workbook.SheetNames[0];
+    const firstSheet = workbook.Sheets[firstSheetName];
+    firstSheet['!cols'] = [
+      { wch: 15 },
+      { wch: 30 },
+      { wch: 30 },
+      { wch: 30 },
+      { wch: 15 },
+      { wch: 10 },
+    ];
+  
+    const newFilePath = join(__dirname, "uploads", SERV_FILENAME);
+    xlsx.writeFile(workbook, newFilePath);
+    return newFilePath;
+  },
+
+  formatRowsForDownload = selectedIncidents => {
+    let [previousSFMember, previousAgent] = ["", ""];
+    let rows = [];
+    Object.entries(selectedIncidents).forEach(([sfMember, agents], sfIndex) => {
+      Object.entries(agents).forEach(([agent, incidents], agentIndex) => {
+        incidents.forEach(incident => {
+          const row = {
+            "SF Member": previousSFMember === sfMember ? "" : sfMember,
+            Agent: previousAgent === agent ? "" : agent,
+            ...["Task Number", "Service", "Contact type", "First time fix"].reduce((acc, key) => ({ ...acc, [key]: incident[key] }), {})
+          };
+          [previousSFMember, previousAgent] = [sfMember, agent];
+          rows.push(row);
+        });
+        agentIndex < Object.keys(agents).length - 1 ? rows.push({}) : null;
+      });
+      sfIndex < Object.keys(selectedIncidents).length - 1 ? rows.push({}, {}) : null;
+    });
+      rows.splice(0, 0, {});
+  
+    return rows;
+  },
+
+  downloadFile = (res, newFilePath) => { const errorHandler = (err, message) => { if (err) throw new Error(`${message} ${err}`); }; const unlinkFile = (path, message) => fs.unlink(path, err => errorHandler(err, message)); res.download(newFilePath, filename, err => { errorHandler(err, "Error sending the file:"); unlinkFile(newFilePath, "Error deleting the processed file:"); unlinkFile(lastUploadedFilePath, "Error deleting the temporary file:"); }); } } = {};

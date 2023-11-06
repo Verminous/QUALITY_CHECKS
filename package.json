@@ -2,7 +2,8 @@
   "dependencies": {
     "concurrently": "^8.2.1",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "exceljs": "^4.4.0"
   },
   "license": "MIT",
   "scripts": {
