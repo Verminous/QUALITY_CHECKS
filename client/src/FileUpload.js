@@ -84,20 +84,23 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
     };
 
     const handleFileInput = async (e) => {
-        const file = fileInput.current.files[0];
-        if (file) {
-            onFileSelect(file);
-            const formData = new FormData();
-            formData.append('file', file);
-            try {
-                const response = await fetch(uploadUrl, {
-                    method: 'POST',
-                    body: formData,
-                });
-                const data = await response.json();
-                setAgentAccounts(data.agentNames.join('\n'));
-            } catch (error) {
-                console.error('Error uploading file:', error);
+        if (e.target.files.length > 0) {
+            const file = e.target.files[0];
+            document.getElementById('file-name').innerHTML = ` <note class="remove_bold">Selected file:</note> ${file.name}`;
+            if (file) {
+                onFileSelect(file);
+                const formData = new FormData();
+                formData.append('file', file);
+                try {
+                    const response = await fetch(uploadUrl, {
+                        method: 'POST',
+                        body: formData,
+                    });
+                    const data = await response.json();
+                    setAgentAccounts(data.agentNames.join('\n'));
+                } catch (error) {
+                    console.error('Error uploading file:', error);
+                }
             }
         }
     };
@@ -146,88 +149,132 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
 
     return (
         <div>
-            <h2>Upload raw Excel file from Snow report</h2>
-            <input type="file" ref={fileInput} onChange={handleFileInput} />
-            <br /><br />
 
-            <h2>Configuration</h2>
-            <label>
-                Incidents per Agent:
-                <select name="incidentsPerAgent" value={config.incidentsPerAgent} onChange={(e) => setConfig({ ...config, incidentsPerAgent: parseInt(e.target.value) })}>
-                    {[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(num => <option key={num} value={num}>{num}</option>)}
-                </select>
-            </label>
-            <br /><br />
+            <div class="block-1">
+                <div class="section-number-1">1</div>
+                <div class="section-content-1">
+                    <tit-2>Upload Excel file report</tit-2>
+                    <br />
+                    <label className="custom-file-upload">
+                        <input type="file" ref={fileInput} onChange={handleFileInput} style={{ display: 'none' }} />
+                        <span>Upload File</span>
+                        <span id="file-name"></span>
+                    </label>
+                    <br />
+                </div>
+            </div>
 
-            <div className="config-grid">
-                <strong>#</strong>
-                <strong>Service:</strong>
-                <strong>Contact Type:</strong>
-                <strong>FTF:</strong>
-                {config.incidentConfigs.map((incidentConfig, index) => (
-                    <React.Fragment key={index}>
-                        <span>{index + 1}</span>
-                        <select value={incidentConfig.service} onChange={(e) => handleIncidentChange(index, 'service', e.target.value)}>
-                            {services.map(service => <option key={service} value={service}>{service}</option>)}
-                        </select>
-                        <select value={incidentConfig.contactType} onChange={(e) => handleIncidentChange(index, 'contactType', e.target.value)}>
+            <hr></hr>
+
+            <div class="block-2">
+                <div class="section-number-2">2</div>
+                <div class="section-content-2">
+                    <tit-2>Incidents per Agent</tit-2>
+                    <br />
+                    <select name="incidentsPerAgent" value={config.incidentsPerAgent} onChange={(e) => setConfig({ ...config, incidentsPerAgent: parseInt(e.target.value) })}>
+                        {[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(num => <option key={num} value={num}>{num}</option>)}
+                    </select>
+                </div>
+            </div>
+
+            <hr></hr>
+
+            <div class="block-3">
+                <div class="section-number-3">3</div>
+                <div class="section-content-3">
+                    <div className="config-random-grid">
+                        <div className="config-grid">
+                            <strong></strong>
+                            <tit-2>Services</tit-2>
+                            {/* <strong>Contact Type:</strong>
+                <strong>FTF:</strong> */}
+                            {config.incidentConfigs.map((incidentConfig, index) => (
+                                <React.Fragment key={index}>
+                                    <span class="list-bullets">{index + 1}</span>
+                                    <select value={incidentConfig.service} onChange={(e) => handleIncidentChange(index, 'service', e.target.value)}>
+                                        {services.map(service => <option key={service} value={service}>{service}</option>)}
+                                    </select>
+                                    {/* <select value={incidentConfig.contactType} onChange={(e) => handleIncidentChange(index, 'contactType', e.target.value)}>
                             {contactTypes.map(type => <option key={type} value={type}>{type}</option>)}
                         </select>
                         <select value={incidentConfig.ftf} onChange={(e) => handleIncidentChange(index, 'ftf', e.target.value)}>
                             <option value="TRUE">TRUE</option>
                             <option value="FALSE">FALSE</option>
                             <option value="RANDOM">RANDOM</option>
-                        </select>
-                    </React.Fragment>
-                ))}
-            </div>
-            <br />
+                        </select> */}
+                                </React.Fragment>
+                            ))}
+                        </div>
+                        <br />
 
-            <div className='all-accounts'>
-                <div className='random-services'>
-                    <h2>Define RANDOM</h2>
-                    {services.filter(service => service !== 'RANDOM').map(service => (
-                        <label key={service}>
-                            <input
-                                type="checkbox"
-                                checked={randomServices[service]}
-                                onChange={() => setRandomServices({ ...randomServices, [service]: !randomServices[service] })}
+                        <vertical-line></vertical-line>
+
+                        <div className='random-services'>
+                            <tit-2>Define 'RANDOM'</tit-2>
+                            {services.filter(service => service !== 'RANDOM').map(service => (
+                                <label key={service}>
+                                    <input
+                                        type="checkbox"
+                                        checked={randomServices[service]}
+                                        onChange={() => setRandomServices({ ...randomServices, [service]: !randomServices[service] })}
+                                    />
+                                    {service}
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr></hr>
+
+            <div class="block-4">
+                <div class="section-number-4">4</div>
+                <div class="section-content-4">
+                    <div className='all-accounts'>
+                        <div className='sf-accounts'>
+                            <tit-2>SF team members</tit-2>
+                            <br />
+                            Change accounts manually <br /><br />
+                            <textarea
+                                rows="10"
+                                cols="30"
+                                value={sfMembers}
+                                onChange={e => setSfMembers(e.target.value)}
+                                placeholder="Paste the list of SF team members here, one per line."
                             />
-                            {service}
-                        </label>
-                    ))}
+                        </div>
+
+                        {/* <vertical-line></vertical-line> */}
+
+                        <div className='agent-accounts'>
+                            <tit-2>Agent Accounts</tit-2>
+                            <br />
+                            Delete unwanted accounts <br /><br />
+                            <textarea
+                                rows="10"
+                                value={agentAccounts}
+                                onChange={e => setAgentAccounts(e.target.value)}
+                                placeholder="Agent accounts will be automatically populated here after file upload."
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div className='all-accounts'>
-                <div className='sf-accounts'>
-                    <h2>SF team members</h2>
-                    (Update/change manually)<br /><br />
-                    <textarea
-                        rows="10"
-                        cols="30"
-                        value={sfMembers}
-                        onChange={e => setSfMembers(e.target.value)}
-                        placeholder="Paste the list of SF team members here, one per line."
-                    />
-                </div>
-                <div className='agent-accounts'>
-                    <h2>Agent Accounts</h2>
-                    ( Populated from raw Excel file<br /> - delete unwanted accounts/lines )<br /><br />
-                    <textarea
-                        rows="10"
-                        value={agentAccounts}
-                        onChange={e => setAgentAccounts(e.target.value)}
-                        placeholder="Agent accounts will be automatically populated here after file upload."
-                    />
-                </div>
+            <hr></hr>
+
+            <div class="block-5">
+                <div class="section-number-5">5</div>
+                <div class="section-content-5">
+                    <tit-2>Process and Download</tit-2>
+                    <br />
+                    <input type="button" value="Process" className="process-button" onClick={handleConfigSubmit} />
+                    <br /><br />
+                </div >
             </div>
+        </div >
 
-            <h2>Process and Download Excel file</h2>
-            <button onClick={handleConfigSubmit}>Process</button>
-            <br /><br />
-
-        </div>
     );
 };
 

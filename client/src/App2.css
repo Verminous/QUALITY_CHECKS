@@ -7,7 +7,7 @@ body {
   color: #f0f0f0;
 }
 
-/*------------------------*/
+/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
 
 .block-5,
 .block-4,
@@ -15,7 +15,8 @@ body {
 .block-2,
 .block-1 {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 100px 800px;
+  background-color: #6e308b;
 }
 
 .section-number-5,
@@ -23,11 +24,13 @@ body {
 .section-number-3,
 .section-number-2,
 .section-number-1 {
-  margin-top: -30px;
-  font-size: 6em;
+  grid-column: 1;
+  margin-top: 0px;
+  font-size: 90px;
   padding-right: 20px;
   color: #575757;
   font-weight: 500;
+  background-color: #8b3030;
 }
 
 .section-content-5,
@@ -35,52 +38,56 @@ body {
 .section-content-3,
 .section-content-2,
 .section-content-1 {
-  background-color: none;
+  grid-column: 2;
+  /* background-color: #608b30; */
 }
 
-.section-content-1 {
-  margin-left: 50px;
-}
-
-.section-content-2 {
-  margin-left: 35px;
-}
-
-.section-content-4 {
-  margin-left: 28px;
-}
-
-.section-content-5 {
-  margin-left: 28px;
-}
-
-/*------------------------*/
+/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
 
 .config-random-grid {
+  display: grid;
   margin-left: 0px;
-  display: flex;
-  justify-content: space-between;
-  align-self: flex-start;
-  gap: 20px;
-}
-
-.config-grid,
-.random-services {
-  width: 100%;
-  align-self: flex-start;
+  grid-template-columns: auto 3px auto;
 }
 
 .config-grid {
+  grid-column: 1;
   display: grid;
-  grid-template-columns: auto minmax(100px, 1fr);
+  grid-template-columns: 20px auto;
+  margin-left: 5px;
   gap: 10px;
-  align-items: left;
   justify-items: left;
 }
 
-.all-accounts {
+.list-bullets {
+  grid-column: 2;
+  margin-right: 5px;
+  color: #797979;
+  width: 20px;
+  display: inline-block;
+  text-align: right;
+}
+
+/* vertical-line {
+  grid-column: 2;
+  margin-right: 15px;
+  background-color: #363636;
+  width: 1px;
+  height: auto;
+} */
+
+.random-services {
+  grid-column: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
+
+.all-accounts-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: auto auto auto;
   gap: 20px;
 }
 
@@ -89,7 +96,7 @@ body {
   width: 100%;
 }
 
-/*------------------------*/
+/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
@@ -102,13 +109,6 @@ hr {
   border: none;
   height: 1px;
   background-color: #464646;
-}
-
-vertical-line {
-  margin-right: 10px;
-  background-color: #464646;
-  width: 1px;
-  height: 1005;
 }
 
 select {
@@ -195,14 +195,6 @@ tit-2-1 {
   display: inline;
 }
 
-.list-bullets {
-  margin-right: 5px;
-  color: #797979;
-  width: 20px;
-  display: inline-block;
-  text-align: right;
-}
-
 .my-uploader {
   margin-top: 15px;
   display: grid;
@@ -213,21 +205,11 @@ tit-2-1 {
 
 label {
   display: inline-block;
-  margin: 5px 0;
+  margin: 0px 0;
   max-width: 90%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.random-services {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-label {
-  margin: 2px 0;
 }
 
 .remove_bold {
