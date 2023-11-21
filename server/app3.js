@@ -39,66 +39,8 @@ const {
 /* WRITE + DOWNLOAD */
 const {
 
-  createAndWriteWorksheet = (workbook, rows) => {
-    const { json_to_sheet, book_append_sheet } = xlsx.utils;
-    const { join } = path;
-    const { SERV_FILENAME } = process.env;
-    const newWorksheet = json_to_sheet(rows);
-    const sheetName = "Processed List";
-    newWorksheet["!cols"] = [
-      { wch: 3 },
-      { wch: 20 },
-      { wch: 25 },
-      { wch: 15 },
-      { wch: 30 },
-      { wch: 20 },
-      { wch: 10 },
-    ];
-    if (!workbook.Sheets[sheetName]) {
-      book_append_sheet(workbook, newWorksheet, sheetName);
-    } else {
-      workbook.Sheets[sheetName] = newWorksheet;
-    }
-    const firstSheetName = workbook.SheetNames[0];
-    const firstSheet = workbook.Sheets[firstSheetName];
-    firstSheet["!cols"] = [
-      { wch: 15 },
-      { wch: 30 },
-      { wch: 30 },
-      { wch: 30 },
-      { wch: 15 },
-      { wch: 10 },
-    ];
-    const newFilePath = join(__dirname, "uploads", SERV_FILENAME);
-    xlsx.writeFile(workbook, newFilePath);
-    return newFilePath;
-  },
-  formatRowsForDownload = selectedIncidents => {
-    let [previousSFMember, previousAgent] = ["", ""];
-    let rows = [];
-    let incidentCount = 1;
-    Object.entries(selectedIncidents).forEach(([sfMember, agents], sfIndex) => {
-      Object.entries(agents).forEach(([agent, incidents], agentIndex) => {
-        incidents.forEach(incident => {
-          const row = {
-            "": previousAgent === agent ? incidentCount++ : (incidentCount = 1),
-            "SF Member": previousSFMember === sfMember ? "" : sfMember,
-            Agent: previousAgent === agent ? "" : agent,
-            ...["Task Number", "Service", "Contact type", "First time fix"].reduce((acc, key) => ({ ...acc, [key]: incident[key] }), {})
-          };
-          rows.push(row);
-          if (previousAgent !== agent) {
-            incidentCount = 2;
-          }
-          [previousSFMember, previousAgent] = [sfMember, agent];
-        });
-        agentIndex < Object.keys(agents).length - 1 ? rows.push({}) : null;
-      });
-      sfIndex < Object.keys(selectedIncidents).length - 1 ? rows.push({}, {}) : null;
-    });
-    rows.splice(0, 0, {});
-    return rows;
-  },
+  createAndWriteWorksheet = (workbook, rows) => { const { json_to_sheet, book_append_sheet } = xlsx.utils; const { join } = path; const { SERV_FILENAME } = process.env; const newWorksheet = json_to_sheet(rows); const sheetName = "Processed List"; newWorksheet["!cols"] = [ { wch: 3 }, { wch: 20 }, { wch: 25 }, { wch: 15 }, { wch: 30 }, /*{ wch: 20 }, { wch: 10 },*/ ]; if (!workbook.Sheets[sheetName]) { book_append_sheet(workbook, newWorksheet, sheetName); } else { workbook.Sheets[sheetName] = newWorksheet; } const firstSheetName = workbook.SheetNames[0]; const firstSheet = workbook.Sheets[firstSheetName]; firstSheet["!cols"] = [ { wch: 15 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 15 }, { wch: 10 }, ]; const newFilePath = join(__dirname, "uploads", SERV_FILENAME); xlsx.writeFile(workbook, newFilePath); return newFilePath; },
+  formatRowsForDownload = selectedIncidents => { let [previousSFMember, previousAgent] = ["", ""]; let rows = []; let incidentCount = 1; Object.entries(selectedIncidents).forEach(([sfMember, agents], sfIndex) => { Object.entries(agents).forEach(([agent, incidents], agentIndex) => { incidents.forEach(incident => { const row = { "": previousAgent === agent ? incidentCount++ : (incidentCount = 1), "SF Member": previousSFMember === sfMember ? "" : sfMember, Agent: previousAgent === agent ? "" : agent, ...["Task Number", "Service"/* , "Contact type", "First time fix" */].reduce((acc, key) => ({ ...acc, [key]: incident[key] }), {}) }; rows.push(row); if (previousAgent !== agent) { incidentCount = 2; } [previousSFMember, previousAgent] = [sfMember, agent]; }); agentIndex < Object.keys(agents).length - 1 ? rows.push({}) : null; }); sfIndex < Object.keys(selectedIncidents).length - 1 ? rows.push({}, {}) : null; }); rows.splice(0, 0, {}); return rows; },
   downloadFile = (res, newFilePath) => { const errorHandler = (err, message) => { if (err) throw new Error(`${message} ${err}`); }; const unlinkFile = (path, message) => fs.unlink(path, err => errorHandler(err, message)); res.download(newFilePath, filename, err => { errorHandler(err, "Error sending the file:"); unlinkFile(newFilePath, "Error deleting the processed file:"); unlinkFile(lastUploadedFilePath, "Error deleting the temporary file:"); }); }
 
 } = {};
