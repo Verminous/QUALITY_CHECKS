@@ -148,13 +148,12 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
     const [agentAccounts, setAgentAccounts] = useState('');
 
     return (
-        <div>
+        <div class="parent-block">
             <div class="qc-tool-title">
                 QC Tool
             </div>
 
-
-            <hr></hr>
+            <hr class="final-hr"></hr>
 
             <div class="block-1">
                 <div class="section-number-1">1</div>
@@ -170,7 +169,7 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
                 </div>
             </div>
 
-            <hr></hr>
+            <hr class="final-hr"></hr>
 
             <div class="block-2">
                 <div class="section-number-2">2</div>
@@ -183,7 +182,7 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
                 </div>
             </div>
 
-            <hr></hr>
+            <hr class="final-hr"></hr>
 
             <div class="block-3">
                 <div class="section-number-3">3</div>
@@ -226,7 +225,7 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
                 </div>
             </div>
 
-            <hr></hr>
+            <hr class="final-hr"></hr>
 
             <div class="block-4">
                 <div class="section-number-4">4</div>
@@ -262,7 +261,7 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
                 </div>
             </div>
 
-            <hr></hr>
+            <hr class="final-hr"></hr>
 
             <div class="block-5">
                 <div class="section-number-5">5</div>
@@ -273,6 +272,8 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
                     <br /><br />
                 </div >
             </div>
+            <hr class="final-hr"></hr>
+            <br/><br/>
         </div >
 
     );
