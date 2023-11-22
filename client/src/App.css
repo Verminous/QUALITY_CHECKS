@@ -15,7 +15,7 @@ body {
 .block-2,
 .block-1 {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 70px 720px;
 }
 
 .section-number-5,
@@ -23,6 +23,7 @@ body {
 .section-number-3,
 .section-number-2,
 .section-number-1 {
+  grid-column: 1;
   margin-top: -30px;
   font-size: 6em;
   padding-right: 20px;
@@ -35,48 +36,66 @@ body {
 .section-content-3,
 .section-content-2,
 .section-content-1 {
-  background-color: none;
+  grid-column: 2;
+  background-color: black;
 }
 
+.section-content-5,
+.section-content-4,
+.section-content-2,
 .section-content-1 {
-  margin-left: 50px;
-}
-
-.section-content-2 {
-  margin-left: 35px;
-}
-
-.section-content-4 {
-  margin-left: 28px;
-}
-
-.section-content-5 {
-  margin-left: 28px;
+  margin-left: 30px;
 }
 
 /*------------------------*/
 
+vertical-line {
+  margin-left: 0px;
+  background-color: #51ff00;
+  width: 1px;
+}
+
 .config-random-grid {
   margin-left: 0px;
-  display: flex;
-  justify-content: space-between;
-  align-self: flex-start;
-  gap: 20px;
-}
-
-.config-grid,
-.random-services {
-  width: 100%;
-  align-self: flex-start;
-}
-
-.config-grid {
   display: grid;
-  grid-template-columns: auto minmax(100px, 1fr);
-  gap: 10px;
-  align-items: left;
-  justify-items: left;
+  grid-template-columns: 315px 5px 400px;
+  grid-template-rows: auto; 
+  gap: 0px;
 }
+
+.services-config-grid {
+  grid-column: 1;
+  display: grid;
+  grid-template-columns: 20px 280px;
+  grid-auto-rows: min-content; 
+  align-items: start; 
+  gap: 10px;
+  height: auto;
+  background-color: #8b3030;
+}
+
+
+.list-bullets {
+  grid-column: 1;
+  /* margin-top: -10px; */
+  margin-right: 5px;
+  color: #797979;
+  width: 20px;
+  text-align: right;
+}
+
+.services-config {
+  grid-column: 2;
+  margin-top: -2px;
+}
+
+.random-services {
+  grid-column: 3;
+  padding-left: 20px;
+  background-color: #48308b;
+}
+
+/*------------------------*/
 
 .all-accounts {
   display: grid;
@@ -104,12 +123,7 @@ hr {
   background-color: #464646;
 }
 
-vertical-line {
-  margin-right: 10px;
-  background-color: #464646;
-  width: 1px;
-  height: 1005;
-}
+
 
 select {
   color: #e2e2e2;
@@ -195,14 +209,6 @@ tit-2-1 {
   display: inline;
 }
 
-.list-bullets {
-  margin-right: 5px;
-  color: #797979;
-  width: 20px;
-  display: inline-block;
-  text-align: right;
-}
-
 .my-uploader {
   margin-top: 15px;
   display: grid;
@@ -233,4 +239,10 @@ label {
 .remove_bold {
   margin-top: 15px;
   font-weight: 100;
+}
+
+select {
+  margin: 0px;
+  padding: 5px;
+  vertical-align: top;
 }

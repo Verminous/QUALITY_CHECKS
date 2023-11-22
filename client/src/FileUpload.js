@@ -183,29 +183,23 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
                 <div class="section-number-3">3</div>
                 <div class="section-content-3">
                     <div className="config-random-grid">
-                        <div className="config-grid">
+                        <div className="services-config-grid">
                             <strong></strong>
                             <tit-2>Services</tit-2>
-                            {/* <strong>Contact Type:</strong>
-                <strong>FTF:</strong> */}
+                            {/* <strong>Contact Type:</strong> <strong>FTF:</strong> */}
                             {config.incidentConfigs.map((incidentConfig, index) => (
                                 <React.Fragment key={index}>
                                     <span class="list-bullets">{index + 1}</span>
+                                    <span class="services-config">
                                     <select value={incidentConfig.service} onChange={(e) => handleIncidentChange(index, 'service', e.target.value)}>
                                         {services.map(service => <option key={service} value={service}>{service}</option>)}
                                     </select>
-                                    {/* <select value={incidentConfig.contactType} onChange={(e) => handleIncidentChange(index, 'contactType', e.target.value)}>
-                            {contactTypes.map(type => <option key={type} value={type}>{type}</option>)}
-                        </select>
-                        <select value={incidentConfig.ftf} onChange={(e) => handleIncidentChange(index, 'ftf', e.target.value)}>
-                            <option value="TRUE">TRUE</option>
-                            <option value="FALSE">FALSE</option>
-                            <option value="RANDOM">RANDOM</option>
-                        </select> */}
+                                    {/* <select value={incidentConfig.contactType} onChange={(e) => handleIncidentChange(index, 'contactType', e.target.value)}> {contactTypes.map(type => <option key={type} value={type}>{type}</option>)} </select> <select value={incidentConfig.ftf} onChange={(e) => handleIncidentChange(index, 'ftf', e.target.value)}> <option value="TRUE">TRUE</option> <option value="FALSE">FALSE</option> <option value="RANDOM">RANDOM</option> </select> */}
+                                    </span>
                                 </React.Fragment>
                             ))}
                         </div>
-                        <br />
+                       {/*  <br /> */}
 
                         <vertical-line></vertical-line>
 
