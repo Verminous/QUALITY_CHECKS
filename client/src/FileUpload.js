@@ -86,7 +86,7 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
     const handleFileInput = async (e) => {
         if (e.target.files.length > 0) {
             const file = e.target.files[0];
-            document.getElementById('file-name').innerHTML = ` <note class="remove_bold">Selected file:</note> ${file.name}`;
+            document.getElementById('file-name').innerHTML = ` <note class="selected_file">Selected file:</note> ${file.name}`;
             if (file) {
                 onFileSelect(file);
                 const formData = new FormData();
@@ -149,6 +149,12 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
 
     return (
         <div>
+            <div class="qc-tool-title">
+                QC Tool
+            </div>
+
+
+            <hr></hr>
 
             <div class="block-1">
                 <div class="section-number-1">1</div>
@@ -157,7 +163,7 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
                     <br />
                     <label className="custom-file-upload">
                         <input type="file" ref={fileInput} onChange={handleFileInput} style={{ display: 'none' }} />
-                        <span>Upload File</span>
+                        <span>Upload file</span>
                         <span id="file-name"></span>
                     </label>
                     <br />
@@ -191,15 +197,15 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
                                 <React.Fragment key={index}>
                                     <span class="list-bullets">{index + 1}</span>
                                     <span class="services-config">
-                                    <select value={incidentConfig.service} onChange={(e) => handleIncidentChange(index, 'service', e.target.value)}>
-                                        {services.map(service => <option key={service} value={service}>{service}</option>)}
-                                    </select>
-                                    {/* <select value={incidentConfig.contactType} onChange={(e) => handleIncidentChange(index, 'contactType', e.target.value)}> {contactTypes.map(type => <option key={type} value={type}>{type}</option>)} </select> <select value={incidentConfig.ftf} onChange={(e) => handleIncidentChange(index, 'ftf', e.target.value)}> <option value="TRUE">TRUE</option> <option value="FALSE">FALSE</option> <option value="RANDOM">RANDOM</option> </select> */}
+                                        <select value={incidentConfig.service} onChange={(e) => handleIncidentChange(index, 'service', e.target.value)}>
+                                            {services.map(service => <option key={service} value={service}>{service}</option>)}
+                                        </select>
+                                        {/* <select value={incidentConfig.contactType} onChange={(e) => handleIncidentChange(index, 'contactType', e.target.value)}> {contactTypes.map(type => <option key={type} value={type}>{type}</option>)} </select> <select value={incidentConfig.ftf} onChange={(e) => handleIncidentChange(index, 'ftf', e.target.value)}> <option value="TRUE">TRUE</option> <option value="FALSE">FALSE</option> <option value="RANDOM">RANDOM</option> </select> */}
                                     </span>
                                 </React.Fragment>
                             ))}
                         </div>
-                       {/*  <br /> */}
+                        {/*  <br /> */}
 
                         <vertical-line></vertical-line>
 
@@ -239,7 +245,7 @@ const FileUpload = ({ onFileSelect, onConfigSubmit }) => {
                             />
                         </div>
 
-                        {/* <vertical-line></vertical-line> */}
+                        {<vertical-line></vertical-line>}
 
                         <div className='agent-accounts'>
                             <tit-2>Agent Accounts</tit-2>

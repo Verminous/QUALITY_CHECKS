@@ -7,6 +7,16 @@ body {
   color: #f0f0f0;
 }
 
+.qc-tool-title{
+  grid-column: 1;
+  margin-top: -30px;
+  margin-left: 95px;
+  font-size: 4em;
+  padding-right: 20px;
+  color: #9e9e9e;
+  font-weight: 500;
+}
+
 /*------------------------*/
 
 .block-5,
@@ -24,8 +34,8 @@ body {
 .section-number-2,
 .section-number-1 {
   grid-column: 1;
-  margin-top: -30px;
-  font-size: 6em;
+  margin-top: -15px;
+  font-size: 4em;
   padding-right: 20px;
   color: #575757;
   font-weight: 500;
@@ -37,7 +47,7 @@ body {
 .section-content-2,
 .section-content-1 {
   grid-column: 2;
-  background-color: black;
+  /* background-color: black; */
 }
 
 .section-content-5,
@@ -51,8 +61,8 @@ body {
 
 vertical-line {
   margin-left: 0px;
-  background-color: #51ff00;
-  width: 1px;
+  background-color: #535353;
+  width: 0.5px;
 }
 
 .config-random-grid {
@@ -71,7 +81,7 @@ vertical-line {
   align-items: start; 
   gap: 10px;
   height: auto;
-  background-color: #8b3030;
+  /* background-color: #8b3030; */
 }
 
 
@@ -91,21 +101,31 @@ vertical-line {
 
 .random-services {
   grid-column: 3;
-  padding-left: 20px;
-  background-color: #48308b;
+  padding-left: 25px;
+  /* background-color: #48308b; */
 }
 
 /*------------------------*/
 
 .all-accounts {
+  margin-left: 0px;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: 285px 5px 400px;
+  grid-template-rows: auto; 
+  gap: 0px;
 }
 
-.sf-accounts,
+.sf-accounts {
+  grid-column: 1;
+  gap: 10px;
+  height: auto;
+  /* background-color: #8b3030; */
+}
+
 .agent-accounts {
-  width: 100%;
+  grid-column: 3;
+  padding-left: 25px;
+  /* background-color: #48308b; */
 }
 
 /*------------------------*/
@@ -119,16 +139,22 @@ hr {
   margin-top: 25px;
   margin-bottom: 25px;
   border: none;
-  height: 1px;
+  height: 0.5px;
+  width: 78%;
   background-color: #464646;
 }
-
-
 
 select {
   color: #e2e2e2;
+  border-radius: 10px;
+  border: none;
   background-color: #464646;
 }
+
+select:hover {
+  background-color: #8b3030;
+}
+
 
 input {
   color: #e2e2e2;
@@ -154,15 +180,18 @@ input[type="checkbox"] {
 
 .custom-file-upload span,
 .process-button {
-  padding: 10px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+  padding-left: 10px;
+  padding-right: 10px;
   background-color: #464646;
   color: #ffffff;
   cursor: pointer;
   border: none;
   text-decoration: none;
-  font-size: 1em;
-  font-weight: bold;
-  border-radius: 5px;
+  font-size: 14px;
+  font-weight:400;
+  border-radius: 10px;
 }
 
 .custom-file-upload span:hover,
@@ -181,7 +210,14 @@ input[type="checkbox"] {
 }
 
 textarea {
+  resize: none;
+  overflow-y: scroll;
+  overflow-x: auto;
+  white-space: nowrap;
+  width: 250px;
+  height: 250px;
   color: #e2e2e2;
+  border-radius: 10px;
   background-color: #464646;
 }
 
@@ -236,7 +272,8 @@ label {
   margin: 2px 0;
 }
 
-.remove_bold {
+.selected_file {
+  color: #adadad;
   margin-top: 15px;
   font-weight: 100;
 }
